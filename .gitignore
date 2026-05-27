@@ -1,0 +1,27 @@
+# deps
+node_modules/
+
+# build
+.next/
+dist/
+build/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+.vscode/settings.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# misc
+*.log
+.turbo
+coverage/
