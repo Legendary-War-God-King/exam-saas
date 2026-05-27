@@ -66,7 +66,7 @@ export class AuthService {
     };
   }
 
-  async refresh(refreshToken: string) {
+  refresh(refreshToken: string) {
     let payload: { sub: string; tenant_id: string; role: string; type: string };
     try {
       payload = this.jwtService.verify(refreshToken, {
@@ -86,10 +86,7 @@ export class AuthService {
   private generateTokens(userId: string, tenantId: string, role: string) {
     const payload = { sub: userId, tenant_id: tenantId, role };
 
-    const accessToken = this.jwtService.sign(
-      { ...payload, type: 'access' },
-      { expiresIn: '15m' },
-    );
+    const accessToken = this.jwtService.sign({ ...payload, type: 'access' }, { expiresIn: '15m' });
 
     const refreshToken = this.jwtService.sign(
       { ...payload, type: 'refresh' },

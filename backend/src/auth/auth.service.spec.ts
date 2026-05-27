@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
@@ -8,8 +9,6 @@ import { LoginDto } from './dto/login.dto';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prisma: PrismaService;
-  let jwt: JwtService;
 
   const mockPrisma = {
     user: { findFirst: jest.fn(), findUnique: jest.fn(), create: jest.fn() },
@@ -28,8 +27,6 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    prisma = module.get(PrismaService);
-    jwt = module.get(JwtService);
     jest.clearAllMocks();
   });
 
@@ -75,7 +72,7 @@ describe('AuthService', () => {
         id: 'u1',
         tenantId: 't1',
         email: dto.email,
-        passwordHash: '$2a$12$LJ3m4ys3Lk0TSwHCpNqrEeJBYuHc8MHW8sPJvFd0aYuXNZ7tVnKOy',
+        passwordHash: bcrypt.hashSync(dto.password, 12),
         name: '张三',
         role: 'ADMIN',
       });
@@ -97,7 +94,7 @@ describe('AuthService', () => {
         id: 'u1',
         tenantId: 't1',
         email: dto.email,
-        passwordHash: '$2a$12$differenthashherexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        passwordHash: bcrypt.hashSync('WrongPassword99', 12),
         name: '张三',
         role: 'ADMIN',
       });
@@ -106,7 +103,7 @@ describe('AuthService', () => {
   });
 
   describe('refresh', () => {
-    it('should refresh tokens with valid refresh token', async () => {
+    it('should refresh tokens with valid refresh token', () => {
       mockJwt.verify.mockReturnValue({
         sub: 'u1',
         tenant_id: 't1',
@@ -115,27 +112,27 @@ describe('AuthService', () => {
       });
       mockJwt.sign.mockReturnValue('new-token');
 
-      const result = await service.refresh('valid-refresh-token');
+      const result = service.refresh('valid-refresh-token');
 
       expect(result.accessToken).toBe('new-token');
       expect(result.refreshToken).toBe('new-token');
     });
 
-    it('should throw UnauthorizedException when token type is not refresh', async () => {
+    it('should throw UnauthorizedException when token type is not refresh', () => {
       mockJwt.verify.mockReturnValue({
         sub: 'u1',
         tenant_id: 't1',
         role: 'ADMIN',
         type: 'access',
       });
-      await expect(service.refresh('access-token')).rejects.toThrow(UnauthorizedException);
+      expect(() => service.refresh('access-token')).toThrow(UnauthorizedException);
     });
 
-    it('should throw UnauthorizedException when token is invalid', async () => {
+    it('should throw UnauthorizedException when token is invalid', () => {
       mockJwt.verify.mockImplementation(() => {
         throw new Error('invalid');
       });
-      await expect(service.refresh('invalid')).rejects.toThrow(UnauthorizedException);
+      expect(() => service.refresh('invalid')).toThrow(UnauthorizedException);
     });
   });
 });

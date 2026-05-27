@@ -2,6 +2,10 @@ import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
+interface RequestWithUser {
+  user?: { role: string };
+}
+
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
@@ -11,10 +15,13 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (!requiredRoles) {
+    if (requiredRoles.length === 0) {
       return true;
     }
-    const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.includes(user.role);
+    const req = context.switchToHttp().getRequest<RequestWithUser>();
+    if (!req.user) {
+      return false;
+    }
+    return requiredRoles.includes(req.user.role);
   }
 }

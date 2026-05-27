@@ -5,19 +5,19 @@ export class RegisterDto {
   @ApiProperty({ example: '阳光培训中心' })
   @IsString()
   @MinLength(2)
-  tenantName: string;
+  tenantName!: string;
 
   @ApiProperty({ example: '张三' })
   @IsString()
   @MinLength(1)
-  name: string;
+  name!: string;
 
   @ApiProperty({ example: 'zhangsan@example.com' })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiProperty({ example: 'Abc12345' })
   @IsString()
   @MinLength(8)
-  password: string;
+  password!: string;
 }
