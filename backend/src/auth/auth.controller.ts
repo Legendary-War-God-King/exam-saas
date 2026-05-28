@@ -1,4 +1,14 @@
-import { Controller, Post, Body, Get, Req, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Req,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
@@ -6,6 +16,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
+import { SetPasswordDto } from './dto/set-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -39,5 +50,13 @@ export class AuthController {
   @ApiOperation({ summary: '获取当前用户信息' })
   me(@Req() req: { user: { id: string } }) {
     return this.authService.getMe(req.user.id);
+  }
+
+  @Post('set-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '首次登录修改密码' })
+  setPassword(@Headers('authorization') auth: string | undefined, @Body() dto: SetPasswordDto) {
+    const token = (auth ?? '').replace('Bearer ', '');
+    return this.authService.setPassword(token, dto.password);
   }
 }

@@ -1,6 +1,12 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -57,6 +63,21 @@ export class AuthService {
       throw new UnauthorizedException('邮箱或密码错误');
     }
 
+    if (user.disabledAt !== null) {
+      throw new ForbiddenException('账号已被禁用');
+    }
+
+    if (user.mustChangePassword) {
+      const token = this.jwtService.sign(
+        { sub: user.id, type: 'set-password' },
+        { expiresIn: '30m' },
+      );
+      return {
+        setPasswordToken: token,
+        user: { id: user.id, name: user.name, role: user.role },
+      };
+    }
+
     const tokens = this.generateTokens(user.id, user.tenantId, user.role);
     return {
       accessToken: tokens.accessToken,
@@ -98,6 +119,37 @@ export class AuthService {
     }
 
     return this.generateTokens(payload.sub, payload.tenant_id, payload.role);
+  }
+
+  generateTempPassword(): string {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    return Array.from({ length: 8 }, () => chars[randomBytes(1)[0] % chars.length]).join('');
+  }
+
+  async setPassword(token: string, password: string) {
+    let payload: { sub: string; type: string };
+    try {
+      payload = this.jwtService.verify(token);
+    } catch {
+      throw new UnauthorizedException('Token 无效或已过期');
+    }
+
+    if (payload.type !== 'set-password') {
+      throw new UnauthorizedException('Token 类型错误');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    if (!user) {
+      throw new UnauthorizedException('用户不存在');
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, mustChangePassword: false },
+    });
+
+    return this.generateTokens(user.id, user.tenantId, user.role);
   }
 
   private generateTokens(userId: string, tenantId: string, role: string) {

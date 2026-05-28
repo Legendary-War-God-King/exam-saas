@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -75,6 +75,8 @@ describe('AuthService', () => {
         passwordHash: bcrypt.hashSync(dto.password, 12),
         name: '张三',
         role: 'ADMIN',
+        disabledAt: null,
+        mustChangePassword: false,
       });
       mockJwt.sign.mockReturnValue('token');
 
@@ -97,8 +99,43 @@ describe('AuthService', () => {
         passwordHash: bcrypt.hashSync('WrongPassword99', 12),
         name: '张三',
         role: 'ADMIN',
+        disabledAt: null,
+        mustChangePassword: false,
       });
       await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw ForbiddenException when user is disabled', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 'u1',
+        tenantId: 't1',
+        email: dto.email,
+        passwordHash: bcrypt.hashSync(dto.password, 12),
+        name: '张三',
+        role: 'ADMIN',
+        disabledAt: new Date(),
+        mustChangePassword: false,
+      });
+      await expect(service.login(dto)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should return setPasswordToken when mustChangePassword is true', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 'u1',
+        tenantId: 't1',
+        email: dto.email,
+        passwordHash: bcrypt.hashSync(dto.password, 12),
+        name: '张三',
+        role: 'TEACHER',
+        disabledAt: null,
+        mustChangePassword: true,
+      });
+      mockJwt.sign.mockReturnValue('temp-token');
+
+      const result = await service.login(dto);
+
+      expect(result.setPasswordToken).toBe('temp-token');
+      expect(result.accessToken).toBeUndefined();
     });
   });
 
