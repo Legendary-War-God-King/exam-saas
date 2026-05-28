@@ -8,13 +8,16 @@ import {
   Query,
   Param,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { ExamService } from './exam.service';
+import { ExamAnalysisService } from './exam-analysis.service';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { AddQuestionDto } from './dto/add-question.dto';
@@ -24,7 +27,10 @@ import { AddQuestionDto } from './dto/add-question.dto';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiBearerAuth()
 export class ExamController {
-  constructor(private readonly examService: ExamService) {}
+  constructor(
+    private readonly examService: ExamService,
+    private readonly analysisService: ExamAnalysisService,
+  ) {}
 
   @Post('exams')
   @Roles('ADMIN', 'TEACHER')
@@ -95,5 +101,50 @@ export class ExamController {
     @Body() dto: { score?: number; sortOrder?: number },
   ) {
     return this.examService.updateQuestion(id, questionId, dto);
+  }
+
+  @Get('exams/:id/results')
+  @Roles('ADMIN', 'TEACHER')
+  @ApiOperation({ summary: '考生成绩列表' })
+  getResults(
+    @Req() req: { user: { tenantId: string } },
+    @Param('id') id: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.analysisService.getResults(
+      req.user.tenantId,
+      id,
+      parseInt(page ?? '1'),
+      parseInt(limit ?? '20'),
+    );
+  }
+
+  @Get('exams/:id/statistics')
+  @Roles('ADMIN', 'TEACHER')
+  @ApiOperation({ summary: '考试统计' })
+  getStats(@Req() req: { user: { tenantId: string } }, @Param('id') id: string) {
+    return this.analysisService.getStatistics(req.user.tenantId, id);
+  }
+
+  @Get('exams/:id/analysis')
+  @Roles('ADMIN', 'TEACHER')
+  @ApiOperation({ summary: '题目分析' })
+  getAnalysis(@Req() req: { user: { tenantId: string } }, @Param('id') id: string) {
+    return this.analysisService.getQuestionAnalysis(req.user.tenantId, id);
+  }
+
+  @Get('exams/:id/export')
+  @Roles('ADMIN', 'TEACHER')
+  @ApiOperation({ summary: '导出 CSV' })
+  async exportExam(
+    @Req() req: { user: { tenantId: string } },
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.analysisService.exportExcel(req.user.tenantId, id);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="exam-${id.slice(0, 8)}.csv"`);
+    res.send(buffer);
   }
 }
