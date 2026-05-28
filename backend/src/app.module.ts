@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantModule } from './tenant/tenant.module';
 import { QuestionBankModule } from './question-bank/question-bank.module';
+import { ExamModule } from './exam/exam.module';
 import { TenantGuard } from './common/guards/tenant.guard';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,6 +24,7 @@ import { AppService } from './app.service';
     AuthModule,
     TenantModule,
     QuestionBankModule,
+    ExamModule,
   ],
   controllers: [AppController],
   providers: [
