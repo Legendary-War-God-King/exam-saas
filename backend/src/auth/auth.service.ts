@@ -66,6 +66,23 @@ export class AuthService {
     };
   }
 
+  async getMe(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { tenant: { select: { id: true, name: true } } },
+    });
+    if (!user) {
+      throw new UnauthorizedException('用户不存在');
+    }
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      tenant: user.tenant,
+    };
+  }
+
   refresh(refreshToken: string) {
     let payload: { sub: string; tenant_id: string; role: string; type: string };
     try {
