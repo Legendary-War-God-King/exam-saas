@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
+import { RedisModule } from './common/redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantModule } from './tenant/tenant.module';
 import { QuestionBankModule } from './question-bank/question-bank.module';
@@ -22,6 +23,7 @@ import { AppService } from './app.service';
       },
     ]),
     PrismaModule,
+    RedisModule,
     AuthModule,
     TenantModule,
     QuestionBankModule,

@@ -6,12 +6,14 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../common/redis/redis.service';
 
 @Injectable()
 export class StudentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly redis: RedisService,
   ) {}
 
   async auth(tenantId: string, studentNo: string, code: string) {
@@ -101,8 +103,17 @@ export class StudentService {
   }
 
   async submitExam(recordId: string, examId: string) {
-    const record = await this.prisma.examRecord.findUnique({ where: { id: recordId } });
+    const record = await this.prisma.examRecord.findUnique({
+      where: { id: recordId },
+      include: { exam: { select: { timeLimit: true, startTime: true } } },
+    });
     if (!record || record.status !== 'IN_PROGRESS') throw new BadRequestException('考试已结束');
+
+    // 超时检查: 开始时间 + 时间限制 + 5分钟缓冲
+    if (record.startTime) {
+      const deadline = new Date(record.startTime.getTime() + (record.exam.timeLimit + 5) * 60000);
+      if (new Date() > deadline) throw new BadRequestException('考试已超时，无法交卷');
+    }
 
     // 算分
     const examQuestions = await this.prisma.examQuestion.findMany({
@@ -143,5 +154,32 @@ export class StudentService {
     });
     if (!record) throw new NotFoundException('考试记录不存在');
     return record;
+  }
+
+  async heartbeat(recordId: string, examId: string) {
+    const record = await this.prisma.examRecord.findUnique({ where: { id: recordId } });
+    if (!record || record.status !== 'IN_PROGRESS') throw new BadRequestException('考试已结束');
+
+    const key = `exam:${examId}:heartbeat:${recordId}`;
+    await this.redis.set(key, Date.now().toString(), 35);
+
+    // 在线考生集合 (教师监考用)
+    await this.redis.sadd(`exam:${examId}:online`, recordId);
+    await this.redis.expire(`exam:${examId}:online`, 60);
+
+    return { ts: Date.now() };
+  }
+
+  async cheatEvent(recordId: string, examId: string, eventType: string, duration?: number) {
+    const record = await this.prisma.examRecord.findUnique({ where: { id: recordId } });
+    if (!record || record.status !== 'IN_PROGRESS') throw new BadRequestException('考试已结束');
+
+    const key = `exam:${examId}:cheat:${recordId}`;
+    await this.redis.zadd(
+      key,
+      Date.now(),
+      JSON.stringify({ eventType, duration, ts: new Date().toISOString() }),
+    );
+    await this.redis.expire(key, 86400);
   }
 }

@@ -35,6 +35,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Security Audit
+        run: pnpm audit --audit-level=high
+
       - name: Test
         run: pnpm test
 

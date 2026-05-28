@@ -56,4 +56,23 @@ export class StudentController {
     void examId;
     return this.studentService.getResult(body.recordId);
   }
+
+  @Post('exams/:examId/heartbeat')
+  @UseGuards(AuthGuard('student-jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '心跳上报 (每10s)' })
+  postHeartbeat(@Param('examId') examId: string, @Body() body: { recordId: string }) {
+    return this.studentService.heartbeat(body.recordId, examId);
+  }
+
+  @Post('exams/:examId/cheat-event')
+  @UseGuards(AuthGuard('student-jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '离场事件记录' })
+  postCheatEvent(
+    @Param('examId') examId: string,
+    @Body() body: { recordId: string; eventType: string; duration?: number },
+  ) {
+    return this.studentService.cheatEvent(body.recordId, examId, body.eventType, body.duration);
+  }
 }
