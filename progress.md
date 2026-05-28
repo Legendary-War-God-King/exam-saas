@@ -1,7 +1,7 @@
 # Exam SaaS — 进度日志
 
-> 分支: main | CI: ✅ | 阶段: Auth 模块完成
-> 下一步: 租户 + 用户系统 (RBAC 完善)
+> 分支: main | CI: 🔄 | 阶段: 用户管理模块完成
+> 下一步: 题库 CRUD + Excel 导入 (Week 3-4)
 > 阻塞: 无
 
 ## 2026-05-27
@@ -79,3 +79,27 @@
 5. DTO strictPropertyInitialization → 属性加 `!` 断言
 
 **后悔日志:** 本地 lint 通过但 CI Lint 爆 60 个错误 — Prisma client 类型在 CI 上没生成。以后加 ORM 的 CI pipeline 第一时间配 prisma generate。
+
+---
+
+### 用户管理模块 ✅
+
+**Phase 1-4: 设计 → TDD 实现**
+
+**交付:**
+- Schema: mustChangePassword + disabledAt (migration `add_user_management_fields`)
+- GET /auth/me: JWT Guard, 含 Tenant 关联 (3 e2e cases)
+- POST /auth/set-password: Temp JWT 验证，改密后签发正式双 Token
+- POST /tenant/users: ADMIN 创建 TEACHER, 8 位随机密码，tempPassword 仅一次可见
+- GET /tenant/users: 分页+搜索(name/email)+角色筛选，自动过滤本租户
+- PATCH /tenant/users/:id: enable/disable，防自禁 (403)
+- login: disabledAt→403, mustChangePassword→temp JWT (type: "set-password", 30min)
+- DTO: RegisterDto / LoginDto / RefreshDto / SetPasswordDto / CreateUserDto / UpdateUserDto
+
+**验证:**
+- ✅ `pnpm lint` — 0 errors
+- ✅ `pnpm test` — 16 passed (4 suites: auth.service + roles.guard + tenant.guard + app.controller)
+- ✅ `pnpm test:e2e` — 4 passed (app + auth-me)
+- ✅ `pnpm build` — 0 errors
+
+**后悔日志:** Prisma migrate 后没 regenerate client，build TSC 报 7 个类型错误（新字段不存在）。以后 migrate 后立即 prisma generate。
