@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { randomInt } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -111,10 +112,11 @@ export class ExamService {
     if (!exam) throw new NotFoundException('考试不存在');
     if (exam.status !== 'DRAFT') throw new BadRequestException('只能发布草稿状态的考试');
     if (exam._count.examQuestions === 0) throw new BadRequestException('考试至少需要一道题目');
+    const accessCode = String(randomInt(100000, 999999));
     return this.prisma.exam.update({
       where: { id },
-      data: { status: 'PUBLISHED' },
-      select: this.examSelect,
+      data: { status: 'PUBLISHED', accessCode },
+      select: { ...this.examSelect, accessCode: true },
     });
   }
 

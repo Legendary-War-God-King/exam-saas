@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { TenantModule } from './tenant/tenant.module';
 import { QuestionBankModule } from './question-bank/question-bank.module';
 import { ExamModule } from './exam/exam.module';
+import { StudentModule } from './student/student.module';
 import { TenantGuard } from './common/guards/tenant.guard';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -25,6 +26,7 @@ import { AppService } from './app.service';
     TenantModule,
     QuestionBankModule,
     ExamModule,
+    StudentModule,
   ],
   controllers: [AppController],
   providers: [
