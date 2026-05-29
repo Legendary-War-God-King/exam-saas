@@ -15,6 +15,7 @@ export default function ExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', timeLimit: 30, passScore: 60, antiCheat: true });
+  const [error, setError] = useState('');
 
   const fetchExams = () => {
     api.get('/exams').then((r) => setExams(r.data));
@@ -23,13 +24,18 @@ export default function ExamsPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api.post('/exams', {
-      title: form.title, description: form.description || undefined,
-      timeLimit: Number(form.timeLimit), passScore: Number(form.passScore), antiCheat: form.antiCheat,
-    });
-    setShowCreate(false);
-    setForm({ title: '', description: '', timeLimit: 30, passScore: 60, antiCheat: true });
-    fetchExams();
+    setError('');
+    try {
+      await api.post('/exams', {
+        title: form.title, description: form.description || undefined,
+        timeLimit: Number(form.timeLimit), passScore: Number(form.passScore), antiCheat: form.antiCheat,
+      });
+      setShowCreate(false);
+      setForm({ title: '', description: '', timeLimit: 30, passScore: 60, antiCheat: true });
+      fetchExams();
+    } catch {
+      setError('创建考试失败，请重试');
+    }
   };
 
   const statusLabel = (s: string) => {
@@ -44,6 +50,12 @@ export default function ExamsPage() {
   return (
     <ProtectedRoute>
       <Layout title="考试管理">
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">&times;</button>
+          </div>
+        )}
         <div className="flex justify-end mb-4">
           <button onClick={() => setShowCreate(true)} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建考试</button>
         </div>

@@ -16,6 +16,7 @@ export default function QuestionBanksPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
+  const [error, setError] = useState('');
 
   const fetchBanks = () => {
     api.get('/question-banks').then((r) => setBanks(r.data));
@@ -24,20 +25,35 @@ export default function QuestionBanksPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api.post('/question-banks', { name, description: desc || undefined });
-    setShowCreate(false); setName(''); setDesc('');
-    fetchBanks();
+    setError('');
+    try {
+      await api.post('/question-banks', { name, description: desc || undefined });
+      setShowCreate(false); setName(''); setDesc('');
+      fetchBanks();
+    } catch {
+      setError('创建题库失败，请重试');
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('确定删除？')) return;
-    await api.delete(`/question-banks/${id}`);
-    fetchBanks();
+    try {
+      await api.delete(`/question-banks/${id}`);
+      fetchBanks();
+    } catch {
+      setError('删除题库失败，请重试');
+    }
   };
 
   return (
     <ProtectedRoute>
       <Layout title="题库管理">
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">&times;</button>
+          </div>
+        )}
         <div className="flex justify-end mb-4">
           <button onClick={() => setShowCreate(true)} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建题库</button>
         </div>

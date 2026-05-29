@@ -18,6 +18,7 @@ export default function UsersPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [error, setError] = useState('');
 
   const fetchUsers = () => {
     api.get('/tenant/users', { params: { page, limit: 20, search: search || undefined, role: role || undefined } })
@@ -28,23 +29,38 @@ export default function UsersPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await api.post('/tenant/users', { name: newName, email: newEmail });
-    alert(`创建成功！临时密码: ${res.data.tempPassword}`);
-    setShowCreate(false);
-    setNewName('');
-    setNewEmail('');
-    fetchUsers();
+    setError('');
+    try {
+      const res = await api.post('/tenant/users', { name: newName, email: newEmail });
+      alert(`创建成功！临时密码: ${res.data.tempPassword}`);
+      setShowCreate(false);
+      setNewName('');
+      setNewEmail('');
+      fetchUsers();
+    } catch {
+      setError('创建失败，请检查邮箱是否已被使用');
+    }
   };
 
   const handleToggle = async (id: string, action: 'enable' | 'disable') => {
-    await api.patch(`/tenant/users/${id}`, { action });
-    fetchUsers();
+    try {
+      await api.patch(`/tenant/users/${id}`, { action });
+      fetchUsers();
+    } catch {
+      setError('操作失败，请重试');
+    }
   };
 
   return (
     <ProtectedRoute>
       <Layout title="用户管理">
         <div className="bg-white rounded-lg shadow p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex justify-between">
+              <span>{error}</span>
+              <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">&times;</button>
+            </div>
+          )}
           <div className="flex justify-between mb-4">
             <div className="flex gap-2">
               <input placeholder="搜索姓名/邮箱" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}

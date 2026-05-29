@@ -21,6 +21,7 @@ export default function QuestionBankDetailPage() {
   const [showImport, setShowImport] = useState(false);
   const [importJson, setImportJson] = useState('');
   const [editQ, setEditQ] = useState<Question | null>(null);
+  const [error, setError] = useState('');
 
   const [form, setForm] = useState({ type: 'SINGLE_CHOICE', content: '', answer: '', difficulty: 1, tags: '', options: '' });
 
@@ -30,53 +31,78 @@ export default function QuestionBankDetailPage() {
     api.get(`/question-banks/${id}/questions`, { params: { limit: 100 } }).then((r) => setQuestions(r.data.data));
   }, [id]);
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    let options: Record<string, string> | undefined;
-    if (form.options) {
-      try { options = JSON.parse(form.options); } catch { /* ignore */ }
-    }
-    await api.post(`/question-banks/${id}/questions`, {
-      type: form.type, content: form.content, answer: form.answer,
-      difficulty: form.difficulty, tags: form.tags ? form.tags.split(',').map((s) => s.trim()) : [],
-      options,
-    });
-    setShowCreate(false);
-    setForm({ type: 'SINGLE_CHOICE', content: '', answer: '', difficulty: 1, tags: '', options: '' });
+  const refreshQuestions = async () => {
     const r = await api.get(`/question-banks/${id}/questions`, { params: { limit: 100 } });
     setQuestions(r.data.data);
   };
 
-  const handleImport = async () => {
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    let options: Record<string, string> | undefined;
+    if (form.options) {
+      try { options = JSON.parse(form.options); } catch { setError('选项 JSON 格式错误'); return; }
+    }
     try {
-      const rows = JSON.parse(importJson);
+      await api.post(`/question-banks/${id}/questions`, {
+        type: form.type, content: form.content, answer: form.answer,
+        difficulty: form.difficulty, tags: form.tags ? form.tags.split(',').map((s) => s.trim()) : [],
+        options,
+      });
+      setShowCreate(false);
+      setForm({ type: 'SINGLE_CHOICE', content: '', answer: '', difficulty: 1, tags: '', options: '' });
+      await refreshQuestions();
+    } catch {
+      setError('创建题目失败，请重试');
+    }
+  };
+
+  const handleImport = async () => {
+    setError('');
+    let rows: unknown[];
+    try { rows = JSON.parse(importJson); } catch { setError('JSON 格式错误'); return; }
+    try {
       const res = await api.post(`/question-banks/${id}/questions/import`, { rows });
       alert(`导入完成: ${res.data.imported} 条`);
       setShowImport(false); setImportJson('');
-      const r = await api.get(`/question-banks/${id}/questions`, { params: { limit: 100 } });
-      setQuestions(r.data.data);
-    } catch { alert('JSON 格式错误'); }
+      await refreshQuestions();
+    } catch {
+      setError('导入失败，请检查数据格式');
+    }
   };
 
   const handleDelete = async (qid: string) => {
     if (!confirm('确定删除？')) return;
-    await api.delete(`/questions/${qid}`);
-    const r = await api.get(`/question-banks/${id}/questions`, { params: { limit: 100 } });
-    setQuestions(r.data.data);
+    try {
+      await api.delete(`/questions/${qid}`);
+      await refreshQuestions();
+    } catch {
+      setError('删除题目失败');
+    }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (!editQ) return;
-    await api.patch(`/questions/${editQ.id}`, { content: editQ.content, answer: editQ.answer, difficulty: editQ.difficulty });
-    setEditQ(null);
-    const r = await api.get(`/question-banks/${id}/questions`, { params: { limit: 100 } });
-    setQuestions(r.data.data);
+    try {
+      await api.patch(`/questions/${editQ.id}`, { content: editQ.content, answer: editQ.answer, difficulty: editQ.difficulty });
+      setEditQ(null);
+      await refreshQuestions();
+    } catch {
+      setError('更新题目失败');
+    }
   };
 
   return (
     <ProtectedRoute>
       <Layout title={`题库: ${bankName}`}>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">&times;</button>
+          </div>
+        )}
         <div className="flex gap-2 mb-4">
           <button onClick={() => setShowCreate(true)} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建题目</button>
           <button onClick={() => setShowImport(true)} className="border px-4 py-1.5 rounded text-sm hover:bg-slate-50">批量导入 (JSON)</button>

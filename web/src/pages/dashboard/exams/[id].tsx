@@ -27,6 +27,7 @@ export default function ExamDetailPage() {
   const [banks, setBanks] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedBank, setSelectedBank] = useState('');
   const [bankQuestions, setBankQuestions] = useState<Array<{ id: string; content: string }>>([]);
+  const [error, setError] = useState('');
 
   const fetchExam = () => {
     if (!id) return;
@@ -48,40 +49,65 @@ export default function ExamDetailPage() {
 
   const handlePublish = async () => {
     if (!id) return;
-    const res = await api.patch(`/exams/${id}/publish`);
-    setAccessCode(res.data.accessCode);
-    fetchExam();
+    setError('');
+    try {
+      const res = await api.patch(`/exams/${id}/publish`);
+      setAccessCode(res.data.accessCode);
+      fetchExam();
+    } catch {
+      setError('发布失败，请确保考试至少含一道题目且状态为草稿');
+    }
   };
 
   const handleAddQuestion = async (questionId: string) => {
-    await api.post(`/exams/${id}/questions`, { questionId, score: 1, sortOrder: (exam?.examQuestions.length ?? 0) + 1 });
-    setShowAddQ(false);
-    fetchExam();
+    try {
+      await api.post(`/exams/${id}/questions`, { questionId, score: 1, sortOrder: (exam?.examQuestions.length ?? 0) + 1 });
+      setShowAddQ(false);
+      fetchExam();
+    } catch {
+      setError('添加题目失败');
+    }
   };
 
   const handleRemoveQuestion = async (questionId: string) => {
-    await api.delete(`/exams/${id}/questions/${questionId}`);
-    fetchExam();
+    try {
+      await api.delete(`/exams/${id}/questions/${questionId}`);
+      fetchExam();
+    } catch {
+      setError('移除题目失败');
+    }
   };
 
   const openAddQuestion = async () => {
     setShowAddQ(true);
-    const r = await api.get('/question-banks');
-    setBanks(r.data);
+    try {
+      const r = await api.get('/question-banks');
+      setBanks(r.data);
+    } catch {
+      setError('加载题库失败');
+    }
   };
 
   const loadBankQuestions = async (bankId: string) => {
     setSelectedBank(bankId);
-    const r = await api.get(`/question-banks/${bankId}/questions`, { params: { limit: 200 } });
-    setBankQuestions(r.data.data);
+    try {
+      const r = await api.get(`/question-banks/${bankId}/questions`, { params: { limit: 200 } });
+      setBankQuestions(r.data.data);
+    } catch {
+      setError('加载题目失败');
+    }
   };
 
   const handleExport = async () => {
-    const res = await api.get(`/exams/${id}/export`, { responseType: 'blob' });
-    const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
-    const a = document.createElement('a');
-    a.href = url; a.download = `exam-${id?.slice(0, 8) ?? 'export'}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const res = await api.get(`/exams/${id}/export`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = `exam-${id?.slice(0, 8) ?? 'export'}.csv`; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setError('导出失败');
+    }
   };
 
   if (!exam) return <ProtectedRoute><Layout title="加载中..."><p className="text-gray-400">加载中...</p></Layout></ProtectedRoute>;
@@ -89,6 +115,12 @@ export default function ExamDetailPage() {
   return (
     <ProtectedRoute>
       <Layout title={exam.title}>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">&times;</button>
+          </div>
+        )}
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-4 text-sm text-gray-500">
             <span>时长: {exam.timeLimit}分钟</span>
