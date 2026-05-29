@@ -98,14 +98,14 @@ export default function ExamDetailPage() {
           </div>
           <div className="flex gap-2">
             {exam.status === 'DRAFT' && (
-              <button onClick={handlePublish} className="bg-green-600 text-white px-4 py-1.5 rounded text-sm hover:bg-green-700">发布</button>
+              <button onClick={handlePublish} className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">发布</button>
             )}
             <button onClick={() => router.push('/dashboard/exams')} className="border px-4 py-1.5 rounded text-sm">返回列表</button>
           </div>
         </div>
 
         {accessCode && (
-          <div className="bg-green-50 border border-green-200 rounded p-3 mb-4 text-sm">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4 text-sm">
             考试码: <span className="font-mono font-bold text-lg">{accessCode}</span>
           </div>
         )}
@@ -122,7 +122,7 @@ export default function ExamDetailPage() {
         {tab === 'paper' && (
           <div>
             <div className="flex justify-end mb-3">
-              <button onClick={openAddQuestion} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700">添加题目</button>
+              <button onClick={openAddQuestion} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">添加题目</button>
             </div>
             <div className="bg-white rounded-lg shadow">
               <table className="w-full text-sm">
@@ -153,7 +153,7 @@ export default function ExamDetailPage() {
         {tab === 'analysis' && (
           <div>
             <div className="flex justify-end mb-3">
-              <button onClick={handleExport} className="border px-4 py-1.5 rounded text-sm hover:bg-gray-50">导出 CSV</button>
+              <button onClick={handleExport} className="border px-4 py-1.5 rounded text-sm hover:bg-slate-50">导出 CSV</button>
             </div>
             {stats && (
               <div className="grid grid-cols-4 gap-4 mb-6">
@@ -193,7 +193,7 @@ export default function ExamDetailPage() {
                       <td className="py-2">{r.student?.class ?? '-'}</td>
                       <td className="py-2 font-medium">{r.score}</td>
                       <td className="py-2">
-                        <span className={`px-2 py-0.5 rounded text-xs ${(r.score ?? 0) >= exam.passScore ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        <span className={`px-2 py-0.5 rounded text-xs ${(r.score ?? 0) >= exam.passScore ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
                           {(r.score ?? 0) >= exam.passScore ? '及格' : '不及格'}
                         </span>
                       </td>
@@ -214,7 +214,7 @@ export default function ExamDetailPage() {
             </select>
             <div className="max-h-60 overflow-y-auto space-y-1">
               {bankQuestions.map((q) => (
-                <div key={q.id} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded text-sm"
+                <div key={q.id} className="flex justify-between items-center p-2 hover:bg-slate-50 rounded text-sm"
                   onClick={() => handleAddQuestion(q.id)}>
                   <span className="truncate flex-1">{q.content}</span>
                   <span className="text-blue-600 text-xs cursor-pointer ml-2">添加</span>

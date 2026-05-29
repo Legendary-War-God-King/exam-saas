@@ -78,9 +78,9 @@ export default function QuestionBankDetailPage() {
     <ProtectedRoute>
       <Layout title={`题库: ${bankName}`}>
         <div className="flex gap-2 mb-4">
-          <button onClick={() => setShowCreate(true)} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700">创建题目</button>
-          <button onClick={() => setShowImport(true)} className="border px-4 py-1.5 rounded text-sm hover:bg-gray-50">批量导入 (JSON)</button>
-          <button onClick={() => router.push('/dashboard/question-banks')} className="border px-4 py-1.5 rounded text-sm hover:bg-gray-50 ml-auto">返回题库列表</button>
+          <button onClick={() => setShowCreate(true)} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建题目</button>
+          <button onClick={() => setShowImport(true)} className="border px-4 py-1.5 rounded text-sm hover:bg-slate-50">批量导入 (JSON)</button>
+          <button onClick={() => router.push('/dashboard/question-banks')} className="border px-4 py-1.5 rounded text-sm hover:bg-slate-50 ml-auto">返回题库列表</button>
         </div>
 
         <div className="bg-white rounded-lg shadow">
@@ -125,14 +125,14 @@ export default function QuestionBankDetailPage() {
               className="w-full border rounded px-3 py-1.5 text-sm" min={1} max={5} />
             <input placeholder="标签 (逗号分隔)" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })}
               className="w-full border rounded px-3 py-1.5 text-sm" />
-            <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">创建</button>
+            <button type="submit" className="w-full bg-brand-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建</button>
           </form>
         </Modal>
 
         <Modal open={showImport} onClose={() => setShowImport(false)} title="批量导入 (JSON)">
           <textarea value={importJson} onChange={(e) => setImportJson(e.target.value)}
             className="w-full border rounded px-3 py-1.5 text-sm h-40 mb-3" placeholder='[{"type":"SINGLE_CHOICE","content":"...","answer":"A","difficulty":1,"tags":[]}]' />
-          <button onClick={handleImport} className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">导入</button>
+          <button onClick={handleImport} className="w-full bg-brand-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">导入</button>
         </Modal>
 
         <Modal open={!!editQ} onClose={() => setEditQ(null)} title="编辑题目">
@@ -144,7 +144,7 @@ export default function QuestionBankDetailPage() {
                 className="w-full border rounded px-3 py-1.5 text-sm" required />
               <input type="number" value={editQ.difficulty} onChange={(e) => setEditQ({ ...editQ, difficulty: parseInt(e.target.value) })}
                 className="w-full border rounded px-3 py-1.5 text-sm" min={1} max={5} />
-              <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">保存</button>
+              <button type="submit" className="w-full bg-brand-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">保存</button>
             </form>
           )}
         </Modal>

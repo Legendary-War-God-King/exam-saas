@@ -63,7 +63,7 @@ export default function DashboardPage() {
 
 function StatCard({ label, value, color, delay }: { label: string; value: number; color: string; delay: string }) {
   const colors: Record<string, { bg: string; text: string; dot: string }> = {
-    blue: { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
+    blue: { bg: 'bg-brand-50', text: 'text-brand-700', dot: 'bg-brand-500' },
     emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
     violet: { bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500' },
   };
@@ -83,7 +83,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
     DRAFT: { label: '草稿', cls: 'bg-slate-100 text-slate-500' },
     PUBLISHED: { label: '已发布', cls: 'bg-emerald-50 text-emerald-700' },
-    IN_PROGRESS: { label: '进行中', cls: 'bg-blue-50 text-blue-700' },
+    IN_PROGRESS: { label: '进行中', cls: 'bg-brand-50 text-brand-700' },
     FINISHED: { label: '已结束', cls: 'bg-amber-50 text-amber-700' },
   };
   const s = map[status] ?? { label: status, cls: 'bg-slate-50 text-slate-400' };

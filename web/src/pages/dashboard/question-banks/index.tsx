@@ -39,7 +39,7 @@ export default function QuestionBanksPage() {
     <ProtectedRoute>
       <Layout title="题库管理">
         <div className="flex justify-end mb-4">
-          <button onClick={() => setShowCreate(true)} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700">创建题库</button>
+          <button onClick={() => setShowCreate(true)} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建题库</button>
         </div>
         <div className="grid grid-cols-3 gap-4">
           {banks.map((b) => (
@@ -69,7 +69,7 @@ export default function QuestionBanksPage() {
               <input value={desc} onChange={(e) => setDesc(e.target.value)}
                 className="w-full border rounded px-3 py-1.5 text-sm" />
             </div>
-            <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">创建</button>
+            <button type="submit" className="w-full bg-brand-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建</button>
           </form>
         </Modal>
       </Layout>

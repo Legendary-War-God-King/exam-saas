@@ -37,15 +37,15 @@ export default function ExamsPage() {
     return map[s] ?? s;
   };
   const statusCls = (s: string) => {
-    const map: Record<string, string> = { DRAFT: 'bg-gray-100 text-gray-600', PUBLISHED: 'bg-green-100 text-green-700', IN_PROGRESS: 'bg-blue-100 text-blue-700', FINISHED: 'bg-orange-100 text-orange-700' };
-    return map[s] ?? 'bg-gray-100';
+    const map: Record<string, string> = { DRAFT: 'bg-slate-100 text-slate-500', PUBLISHED: 'bg-emerald-50 text-emerald-600', IN_PROGRESS: 'bg-brand-100 text-brand-700', FINISHED: 'bg-accent-50 text-accent-600' };
+    return map[s] ?? 'bg-slate-100';
   };
 
   return (
     <ProtectedRoute>
       <Layout title="考试管理">
         <div className="flex justify-end mb-4">
-          <button onClick={() => setShowCreate(true)} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700">创建考试</button>
+          <button onClick={() => setShowCreate(true)} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建考试</button>
         </div>
         <div className="bg-white rounded-lg shadow">
           <table className="w-full text-sm">
@@ -56,7 +56,7 @@ export default function ExamsPage() {
             </thead>
             <tbody>
               {exams.map((e) => (
-                <tr key={e.id} className="border-b last:border-0 cursor-pointer hover:bg-gray-50"
+                <tr key={e.id} className="border-b last:border-0 cursor-pointer hover:bg-slate-50"
                   onClick={() => router.push(`/dashboard/exams/${e.id}`)}>
                   <td className="py-2 px-4">{e.title}</td>
                   <td className="py-2 px-4">{e.timeLimit}</td>
@@ -88,7 +88,7 @@ export default function ExamsPage() {
               <input type="checkbox" checked={form.antiCheat} onChange={(e) => setForm({ ...form, antiCheat: e.target.checked })} />
               启用防作弊
             </label>
-            <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">创建</button>
+            <button type="submit" className="w-full bg-brand-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建</button>
           </form>
         </Modal>
       </Layout>

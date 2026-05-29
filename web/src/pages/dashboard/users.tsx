@@ -56,7 +56,7 @@ export default function UsersPage() {
                 <option value="TEACHER">教师</option>
               </select>
             </div>
-            <button onClick={() => setShowCreate(true)} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700">
+            <button onClick={() => setShowCreate(true)} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">
               创建教师
             </button>
           </div>
@@ -74,14 +74,14 @@ export default function UsersPage() {
                   <td className="py-2 text-gray-500">{u.email}</td>
                   <td className="py-2">{u.role === 'ADMIN' ? '管理员' : '教师'}</td>
                   <td className="py-2">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${u.disabledAt ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${u.disabledAt ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
                       {u.disabledAt ? '已禁用' : '正常'}
                     </span>
                   </td>
                   <td className="py-2">
                     <button
                       onClick={() => handleToggle(u.id, u.disabledAt ? 'enable' : 'disable')}
-                      className={`text-xs px-2 py-0.5 rounded ${u.disabledAt ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50'}`}
+                      className={`text-xs px-2 py-0.5 rounded ${u.disabledAt ? 'text-emerald-600 hover:bg-emerald-50' : 'text-red-500 hover:bg-red-50'}`}
                     >
                       {u.disabledAt ? '启用' : '禁用'}
                     </button>
@@ -114,7 +114,7 @@ export default function UsersPage() {
               <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
                 className="w-full border rounded px-3 py-1.5 text-sm" required />
             </div>
-            <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">创建</button>
+            <button type="submit" className="w-full bg-brand-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建</button>
           </form>
         </Modal>
       </Layout>

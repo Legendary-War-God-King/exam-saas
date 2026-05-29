@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 const links = [
-  { href: '/dashboard', label: '首页', icon: 'H', color: 'bg-blue-500' },
+  { href: '/dashboard', label: '首页', icon: 'H', color: 'bg-brand-500' },
   { href: '/dashboard/users', label: '用户管理', icon: 'U', color: 'bg-emerald-500' },
   { href: '/dashboard/question-banks', label: '题库管理', icon: 'Q', color: 'bg-violet-500' },
   { href: '/dashboard/exams', label: '考试管理', icon: 'E', color: 'bg-amber-500' },
