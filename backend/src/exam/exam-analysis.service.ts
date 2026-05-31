@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Workbook } from 'exceljs';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -157,23 +158,32 @@ export class ExamAnalysisService {
       },
     });
 
-    const header = '学号,姓名,班级,分数,用时(分钟),是否及格';
-    const rows = records.map((r) => {
+    const wb = new Workbook();
+    const ws = wb.addWorksheet('成绩单');
+    ws.columns = [
+      { header: '学号', key: 'studentNo', width: 15 },
+      { header: '姓名', key: 'name', width: 12 },
+      { header: '班级', key: 'class', width: 12 },
+      { header: '分数', key: 'score', width: 10 },
+      { header: '用时(分钟)', key: 'time', width: 12 },
+      { header: '是否及格', key: 'pass', width: 10 },
+    ];
+
+    for (const r of records) {
       const time =
         r.startTime && r.endTime
           ? Math.round((r.endTime.getTime() - r.startTime.getTime()) / 60000)
           : '-';
-      const pass = (r.score ?? 0) >= exam.passScore ? '是' : '否';
-      return [
-        r.student.studentNo,
-        r.student.name,
-        r.student.class ?? '',
-        r.score ?? 0,
-        time,
-        pass,
-      ].join(',');
-    });
+      ws.addRow({
+        studentNo: r.student.studentNo,
+        name: r.student.name,
+        class: r.student.class ?? '',
+        score: r.score ?? 0,
+        time: String(time),
+        pass: (r.score ?? 0) >= exam.passScore ? '是' : '否',
+      });
+    }
 
-    return Buffer.from([header, ...rows].join('\n'), 'utf-8');
+    return Buffer.from(await wb.xlsx.writeBuffer());
   }
 }

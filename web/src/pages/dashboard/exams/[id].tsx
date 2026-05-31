@@ -101,9 +101,9 @@ export default function ExamDetailPage() {
   const handleExport = async () => {
     try {
       const res = await api.get(`/exams/${id}/export`, { responseType: 'blob' });
-      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
       const a = document.createElement('a');
-      a.href = url; a.download = `exam-${id?.slice(0, 8) ?? 'export'}.csv`; a.click();
+      a.href = url; a.download = `exam-${id?.slice(0, 8) ?? 'export'}.xlsx`; a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
       setError('导出失败');

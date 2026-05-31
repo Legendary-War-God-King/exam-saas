@@ -136,15 +136,18 @@ export class ExamController {
 
   @Get('exams/:id/export')
   @Roles('ADMIN', 'TEACHER')
-  @ApiOperation({ summary: '导出 CSV' })
+  @ApiOperation({ summary: '导出 Excel' })
   async exportExam(
     @Req() req: { user: { tenantId: string } },
     @Param('id') id: string,
     @Res() res: Response,
   ) {
     const buffer = await this.analysisService.exportExcel(req.user.tenantId, id);
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="exam-${id.slice(0, 8)}.csv"`);
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader('Content-Disposition', `attachment; filename="exam-${id.slice(0, 8)}.xlsx"`);
     res.send(buffer);
   }
 }
