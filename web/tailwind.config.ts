@@ -5,8 +5,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Noto Sans SC"', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        sans: ['system-ui', '-apple-system', '"Microsoft YaHei"', '"PingFang SC"', 'sans-serif'],
+        mono: ['"Cascadia Code"', 'Consolas', 'monospace'],
       },
       colors: {
         brand: {
