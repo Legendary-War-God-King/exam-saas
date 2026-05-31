@@ -103,6 +103,24 @@ export class ExamController {
     return this.examService.updateQuestion(id, questionId, dto);
   }
 
+  @Post('exams/generate')
+  @Roles('ADMIN', 'TEACHER')
+  @ApiOperation({ summary: '智能组卷（从题库随机抽题）' })
+  generate(
+    @Req() req: { user: { tenantId: string; id: string } },
+    @Body()
+    body: {
+      title: string;
+      timeLimit: number;
+      passScore: number;
+      bankId: string;
+      questionCount: number;
+      difficulty?: number;
+    },
+  ) {
+    return this.examService.generateExam(req.user.tenantId, req.user.id, body);
+  }
+
   @Get('exams/:id/results')
   @Roles('ADMIN', 'TEACHER')
   @ApiOperation({ summary: '考生成绩列表' })

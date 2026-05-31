@@ -141,4 +141,55 @@ export class ExamService {
       data,
     });
   }
+
+  async generateExam(
+    tenantId: string,
+    createdBy: string,
+    dto: {
+      title: string;
+      timeLimit: number;
+      passScore: number;
+      bankId: string;
+      questionCount: number;
+      difficulty?: number;
+    },
+  ) {
+    // Get questions from bank
+    const where: Record<string, unknown> = { bankId: dto.bankId, deletedAt: null };
+    if (dto.difficulty) where.difficulty = dto.difficulty;
+
+    const questions = await this.prisma.question.findMany({ where, select: { id: true } });
+    if (questions.length < dto.questionCount) {
+      throw new BadRequestException(
+        `题库仅有 ${questions.length} 道题，无法抽取 ${dto.questionCount} 道`,
+      );
+    }
+
+    // Random select
+    const shuffled = questions.sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, dto.questionCount);
+
+    // Create exam
+    const exam = await this.prisma.exam.create({
+      data: {
+        tenantId,
+        createdBy,
+        title: dto.title,
+        timeLimit: dto.timeLimit,
+        passScore: dto.passScore,
+      },
+      select: this.examSelect,
+    });
+
+    // Add questions
+    const examQuestions = selected.map((q, i) => ({
+      examId: exam.id,
+      questionId: q.id,
+      score: 3,
+      sortOrder: i + 1,
+    }));
+    await this.prisma.examQuestion.createMany({ data: examQuestions });
+
+    return { ...exam, questionCount: dto.questionCount };
+  }
 }

@@ -9,6 +9,7 @@ import { TenantModule } from './tenant/tenant.module';
 import { QuestionBankModule } from './question-bank/question-bank.module';
 import { ExamModule } from './exam/exam.module';
 import { StudentModule } from './student/student.module';
+import { GatewayModule } from './common/gateway/gateway.module';
 import { TenantGuard } from './common/guards/tenant.guard';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -29,6 +30,7 @@ import { AppService } from './app.service';
     QuestionBankModule,
     ExamModule,
     StudentModule,
+    GatewayModule,
   ],
   controllers: [AppController],
   providers: [
