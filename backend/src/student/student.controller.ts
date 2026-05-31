@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Param, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { StudentService } from './student.service';
@@ -52,9 +52,9 @@ export class StudentController {
   @UseGuards(AuthGuard('student-jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: '查看成绩' })
-  getResult(@Param('examId') examId: string, @Body() body: { recordId: string }) {
+  getResult(@Param('examId') examId: string, @Query('recordId') recordId: string) {
     void examId;
-    return this.studentService.getResult(body.recordId);
+    return this.studentService.getResult(recordId);
   }
 
   @Post('exams/:examId/heartbeat')

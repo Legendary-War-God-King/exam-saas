@@ -22,7 +22,7 @@ export default function ExamLoginPage() {
       const res = await studentApi.post('/student/auth', {
         studentNo: studentNo.trim(),
         code: code.trim(),
-        tenantId: 'ebe1b466-4265-46a8-a221-dfb743032a74', // hardcoded — V2 add tenant discovery
+        tenantId: 'a98e63c8-3de8-4346-b44e-ab5dfa8c155a',
       });
       sessionStorage.setItem('studentToken', res.data.token);
       sessionStorage.setItem('studentName', res.data.student.name);

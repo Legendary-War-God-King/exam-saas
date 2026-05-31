@@ -12,16 +12,11 @@ export default function ExamResultPage() {
   useEffect(() => {
     if (!recordId) return;
     studentApi.get(`/student/exams/${examId}/result`, {
-      data: { recordId },
+      params: { recordId },
     }).then((r) => {
       setResult(r.data);
       setLoading(false);
-    }).catch(() => {
-      // GET with body not supported — try POST-style approach
-      studentApi.post(`/student/exams/${examId}/submit`, { recordId })
-        .then((r2) => { setResult(r2.data); setLoading(false); })
-        .catch(() => setLoading(false));
-    });
+    }).catch(() => setLoading(false));
   }, [recordId, examId]);
 
   if (loading) {

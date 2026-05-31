@@ -125,7 +125,23 @@ export default function ExamPage() {
                         {v}
                       </button>
                     ))
-                  : (
+                  : q.type === 'TRUE_FALSE' ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      {['正确', '错误'].map((label) => (
+                        <button
+                          key={label}
+                          onClick={() => chooseAnswer(q.id, label)}
+                          className={`py-4 rounded-xl border text-lg font-medium transition-colors ${
+                            answers[q.id] === label
+                              ? 'border-brand-500 bg-brand-50 text-brand-700'
+                              : 'border-slate-200 hover:border-slate-300 text-slate-500'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
                     <input
                       type="text"
                       value={answers[q.id] ?? ''}
