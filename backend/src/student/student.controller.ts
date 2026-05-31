@@ -75,4 +75,20 @@ export class StudentController {
   ) {
     return this.studentService.cheatEvent(body.recordId, examId, body.eventType, body.duration);
   }
+
+  @Get('wrong-questions')
+  @UseGuards(AuthGuard('student-jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '错题本' })
+  getWrongQuestions(
+    @Req() req: { user: { studentId: string } },
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.studentService.getWrongQuestions(
+      req.user.studentId,
+      parseInt(page ?? '1'),
+      parseInt(limit ?? '20'),
+    );
+  }
 }

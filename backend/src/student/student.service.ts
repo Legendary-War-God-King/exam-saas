@@ -156,6 +156,42 @@ export class StudentService {
     return record;
   }
 
+  async getWrongQuestions(studentId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const answers = await this.prisma.answer.findMany({
+      where: { correct: false, record: { studentId, status: 'SUBMITTED' } },
+      orderBy: { record: { createdAt: 'desc' } },
+      include: {
+        record: { select: { exam: { select: { title: true } } } },
+      },
+    });
+
+    const questionIds = [...new Set(answers.map((a) => a.questionId))].slice(skip, skip + limit);
+    const questions = await this.prisma.question.findMany({
+      where: { id: { in: questionIds }, deletedAt: null },
+      select: {
+        id: true,
+        type: true,
+        content: true,
+        options: true,
+        answer: true,
+        difficulty: true,
+        tags: true,
+      },
+    });
+
+    return {
+      data: questions.map((q) => ({
+        ...q,
+        wrongCount: answers.filter((a) => a.questionId === q.id).length,
+        lastExam: answers.find((a) => a.questionId === q.id)?.record.exam.title,
+      })),
+      total: questionIds.length,
+      page,
+      limit,
+    };
+  }
+
   async heartbeat(recordId: string, examId: string) {
     const record = await this.prisma.examRecord.findUnique({ where: { id: recordId } });
     if (!record || record.status !== 'IN_PROGRESS') throw new BadRequestException('考试已结束');

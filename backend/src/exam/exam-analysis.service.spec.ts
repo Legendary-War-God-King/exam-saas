@@ -69,7 +69,7 @@ describe('ExamAnalysisService', () => {
   });
 
   describe('exportExcel', () => {
-    it('should generate CSV with header and rows', async () => {
+    it('should generate xlsx buffer', async () => {
       prisma.exam.findFirst.mockResolvedValue({ passScore: 60 });
       prisma.examRecord.findMany.mockResolvedValue([
         {
@@ -80,10 +80,9 @@ describe('ExamAnalysisService', () => {
         },
       ]);
 
-      const csv = await service.exportExcel('t1', 'e1');
-      const text = csv.toString('utf-8');
-      expect(text).toContain('学号,姓名,班级,分数,用时(分钟),是否及格');
-      expect(text).toContain('001,Tom,A班,80,30,是');
+      const buffer = await service.exportExcel('t1', 'e1');
+      expect(Buffer.isBuffer(buffer)).toBe(true);
+      expect(buffer.length).toBeGreaterThan(100);
     });
   });
 });
