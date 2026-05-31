@@ -1,15 +1,25 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useAuthStore } from '@/lib/store';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const accessToken = useAuthStore((s) => s.accessToken);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!accessToken) router.replace('/login');
-  }, [accessToken, router]);
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      router.replace('/login');
+    } else {
+      setMounted(true);
+    }
+  }, [router]);
 
-  if (!accessToken) return null;
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-slate-400 text-sm">加载中...</p>
+      </div>
+    );
+  }
   return <>{children}</>;
 }
