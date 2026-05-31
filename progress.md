@@ -1,7 +1,7 @@
 # Exam SaaS — 进度日志
 
-> 分支: main | CI: ✅ | 阶段: V1 后台完成
-> 下一步: 前端 Next.js Web 管理端 或 V2 迭代
+> 分支: main | CI: ✅ | 阶段: V2 完成，项目收尾
+> 下一步: 简历项目总结 / 录 Demo
 > 阻塞: 无
 
 ## 2026-05-27
@@ -89,3 +89,49 @@
 3. Prisma migrate 后立即 regenerate client
 4. 网络不稳定时优先用 npmmirror 镜像
 5. strictTypeChecked 要求所有 DTO 属性加 `!` 或初始化
+
+---
+
+## 2026-05-31
+
+### H5 学生端 ✅
+
+**交付:** /exam (学号+考试码登录), /exam/[examId] (答题+倒计时+交卷), /exam/[examId]/result (成绩页)
+**验证:** Playwright 5 页全部 200, 0 业务错误
+**修复:** 数据库 UTF-8 乱码重建, Hydration Error (ProtectedRoute SSR), GET /result 改用 Query
+
+---
+
+### a11y + 测试覆盖率提升 ✅
+
+**a11y:** Modal Escape 关闭 + Sidebar `aria-hidden` + heading `<h2>`
+**测试:** +10 tests (TenantService + QuestionBankService), 覆盖率 28%→33%, 40 tests total
+**阈值:** 更新 coverageThreshold 29/30/28/28
+
+---
+
+### V2 迭代 ✅
+
+**Excel 导出:** CSV→exceljs xlsx, 前端后缀 .xlsx
+**错题本:** GET /student/wrong-questions (页码+错题次数+关联考试)
+**智能组卷:** POST /exams/generate (从题库随机抽题, 支持难度筛选)
+**WebSocket 监考:** Socket.IO /proctoring (心跳/在线人数/作弊警报)
+
+**验证:** lint ✅ | build ✅ | test 40/40 ✅
+
+---
+
+## 最终状态
+
+| 指标 | 值 |
+|------|----|
+| 数据表 | 9 张 |
+| 后端模块 | 8 (auth, tenant, question-bank, exam, student, common, gateway, prisma) |
+| API 端点 | 40+ |
+| 前端页面 | 11 (管理后台 8 + H5 学生端 3) |
+| 单元测试 | 40 (10 suites) |
+| E2E 测试 | 4 |
+| CI | lint → security audit → prisma generate → jest --coverage → build |
+| GitHub | 33 commits, Legendary-War-God-King/exam-saas |
+| 设计文档 | 10 份 |
+| 截图验证 | 5 Playwright 截图 |
