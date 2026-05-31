@@ -36,6 +36,7 @@ export default function Sidebar() {
             >
               <span
                 className={`w-5 h-5 flex items-center justify-center rounded text-[10px] font-bold ${l.color}`}
+                aria-hidden="true"
               >
                 {l.icon}
               </span>
