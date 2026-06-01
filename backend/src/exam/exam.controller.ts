@@ -103,6 +103,13 @@ export class ExamController {
     return this.examService.updateQuestion(id, questionId, dto);
   }
 
+  @Post('exams/:id/import-bank')
+  @Roles('ADMIN', 'TEACHER')
+  @ApiOperation({ summary: '从题库批量导入所有题目' })
+  importBank(@Param('id') id: string, @Body() body: { bankId: string }) {
+    return this.examService.bulkAddQuestions(id, body.bankId);
+  }
+
   @Post('exams/generate')
   @Roles('ADMIN', 'TEACHER')
   @ApiOperation({ summary: '智能组卷（从题库随机抽题）' })

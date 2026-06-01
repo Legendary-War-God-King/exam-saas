@@ -28,6 +28,8 @@ export default function ExamDetailPage() {
   const [selectedBank, setSelectedBank] = useState('');
   const [bankQuestions, setBankQuestions] = useState<Array<{ id: string; content: string }>>([]);
   const [error, setError] = useState('');
+  const [showImportBank, setShowImportBank] = useState(false);
+  const [importBanks, setImportBanks] = useState<Array<{ id: string; name: string }>>([]);
 
   const fetchExam = () => {
     if (!id) return;
@@ -75,6 +77,26 @@ export default function ExamDetailPage() {
       fetchExam();
     } catch {
       setError('移除题目失败');
+    }
+  };
+
+  const handleImportBank = async () => {
+    try {
+      const r = await api.get('/question-banks');
+      setImportBanks(r.data);
+      setShowImportBank(true);
+    } catch {
+      setError('加载题库列表失败');
+    }
+  };
+
+  const confirmImportBank = async (bankId: string) => {
+    try {
+      await api.post(`/exams/${id}/import-bank`, { bankId });
+      setShowImportBank(false);
+      fetchExam();
+    } catch {
+      setError('导入失败，请重试');
     }
   };
 
@@ -155,6 +177,7 @@ export default function ExamDetailPage() {
           <div>
             <div className="flex justify-end mb-3">
               <button onClick={openAddQuestion} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">添加题目</button>
+              <button onClick={handleImportBank} className="border px-4 py-1.5 rounded-lg text-sm hover:bg-slate-50">从题库全部导入</button>
             </div>
             <div className="bg-white rounded-lg shadow">
               <table className="w-full text-sm">
@@ -253,6 +276,20 @@ export default function ExamDetailPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </Modal>
+
+        <Modal open={showImportBank} onClose={() => setShowImportBank(false)} title="从题库全部导入">
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {importBanks.map((b) => (
+              <button key={b.id}
+                onClick={() => confirmImportBank(b.id)}
+                className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded text-sm border border-slate-100"
+              >
+                <span className="font-medium">{b.name}</span>
+              </button>
+            ))}
+            {importBanks.length === 0 && <p className="text-gray-400 text-sm text-center py-4">暂无题库</p>}
           </div>
         </Modal>
       </Layout>

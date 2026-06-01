@@ -120,6 +120,34 @@ export class ExamService {
     });
   }
 
+  async bulkAddQuestions(examId: string, bankId: string) {
+    const questions = await this.prisma.question.findMany({
+      where: { bankId, deletedAt: null },
+      select: { id: true },
+    });
+    const existingIds = (await this.prisma.examQuestion.findMany({
+      where: { examId },
+      select: { questionId: true },
+    })).map((e) => e.questionId);
+    const existing = await this.prisma.examQuestion.findMany({
+      where: { examId },
+      select: { sortOrder: true },
+    });
+    const startOrder =
+      (existing.length > 0 ? Math.max(...existing.map((e) => e.sortOrder)) : 0) + 1;
+    const newQuestions = questions.filter((q) => !existingIds.includes(q.id));
+    if (newQuestions.length === 0) return { imported: 0, message: '所有题目已添加' };
+    await this.prisma.examQuestion.createMany({
+      data: newQuestions.map((q, i) => ({
+        examId,
+        questionId: q.id,
+        score: 3,
+        sortOrder: startOrder + i,
+      })),
+    });
+    return { imported: newQuestions.length };
+  }
+
   async addQuestion(examId: string, questionId: string, score: number, sortOrder: number) {
     return this.prisma.examQuestion.create({
       data: { examId, questionId, score, sortOrder },
