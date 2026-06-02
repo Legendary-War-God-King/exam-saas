@@ -171,9 +171,9 @@ export class StudentService {
     });
   }
 
-  async getResult(recordId: string) {
-    const record = await this.prisma.examRecord.findUnique({
-      where: { id: recordId },
+  async getResult(recordId: string, tenantId: string) {
+    const record = await this.prisma.examRecord.findFirst({
+      where: { id: recordId, student: { tenantId } },
       include: {
         exam: { select: { title: true, passScore: true, timeLimit: true } },
         answers: {
