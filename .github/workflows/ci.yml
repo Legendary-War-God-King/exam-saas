@@ -193,7 +193,12 @@ jobs:
         working-directory: ./backend
         run: |
           npx prisma migrate deploy
-          npx ts-node prisma/seed.ts
+          # Compile seed.ts to JS first — ts-node under nodenext moduleResolution
+          # can't resolve @prisma/client's PrismaClient (only exposes types via
+          # the generated .prisma/client path). Compiling to CJS bypasses that.
+          npx tsc prisma/seed.ts --outDir dist-seed --module commonjs \
+            --esModuleInterop --skipLibCheck --target ES2020
+          node dist-seed/seed.js
 
       - name: Start backend (prod)
         working-directory: ./backend
