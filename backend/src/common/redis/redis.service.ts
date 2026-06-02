@@ -5,11 +5,13 @@ import Redis from 'ioredis';
 export class RedisService implements OnModuleDestroy {
   readonly client: Redis;
 
-  constructor() {
-    this.client = new Redis({
-      host: process.env.REDIS_HOST ?? 'localhost',
-      port: parseInt(process.env.REDIS_PORT ?? '6379'),
-    });
+  constructor(client?: Redis) {
+    this.client =
+      client ??
+      new Redis({
+        host: process.env.REDIS_HOST ?? 'localhost',
+        port: parseInt(process.env.REDIS_PORT ?? '6379'),
+      });
   }
 
   onModuleDestroy() {
