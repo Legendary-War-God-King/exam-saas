@@ -107,48 +107,45 @@ export class ExamAnalysisService {
     });
     if (!exam) throw new NotFoundException('考试不存在');
 
-    // 一次查询获取所有交卷记录的答案
     const records = await this.prisma.examRecord.findMany({
       where: { examId, status: 'SUBMITTED' },
       include: { answers: true },
     });
 
-    // 构建答案映射表，键为 questionId，值为答案数组
-    const answerByQuestion = new Map<
+    // 用 Map 按 questionId 索引，避免 O(records × questions) 嵌套查找
+    const answersByQ = new Map<
       string,
-      { selectedAnswer: string | null; correct: boolean }[]
+      { total: number; correct: number; dist: Record<string, number> }
     >();
     for (const record of records) {
       for (const ans of record.answers) {
-        const existing = answerByQuestion.get(ans.questionId) ?? [];
-        existing.push({ selectedAnswer: ans.selectedAnswer, correct: ans.correct });
-        answerByQuestion.set(ans.questionId, existing);
+        let agg = answersByQ.get(ans.questionId);
+        if (!agg) {
+          agg = { total: 0, correct: 0, dist: {} };
+          answersByQ.set(ans.questionId, agg);
+        }
+        agg.total++;
+        if (ans.correct) agg.correct++;
+        const key = ans.selectedAnswer ?? '(未作答)';
+        agg.dist[key] = (agg.dist[key] ?? 0) + 1;
       }
     }
 
     return exam.examQuestions.map((eq) => {
-      const questionAnswers = answerByQuestion.get(eq.question.id) ?? [];
-      const answerCounts: Record<string, number> = {};
-      let correctCount = 0;
-
-      for (const ans of questionAnswers) {
-        const key = ans.selectedAnswer ?? '(未作答)';
-        answerCounts[key] = (answerCounts[key] ?? 0) + 1;
-        if (ans.correct) correctCount++;
-      }
-
+      const qid = eq.question.id;
+      const agg = answersByQ.get(qid);
+      const totalAnswers = agg?.total ?? 0;
+      const correctCount = agg?.correct ?? 0;
       const correctRate =
-        questionAnswers.length > 0
-          ? Math.round((correctCount / questionAnswers.length) * 10000) / 100
-          : 0;
+        totalAnswers > 0 ? Math.round((correctCount / totalAnswers) * 10000) / 100 : 0;
 
       return {
-        questionId: eq.question.id,
+        questionId: qid,
         content: eq.question.content,
         type: eq.question.type,
         correctAnswer: eq.question.answer,
         correctRate,
-        answerDistribution: answerCounts,
+        answerDistribution: agg?.dist ?? {},
         difficulty: eq.question.difficulty,
         actualDifficulty: correctRate > 0 ? Math.round(100 - correctRate) / 100 : null,
       };
