@@ -21,10 +21,10 @@ describe('StudentService', () => {
         findUnique: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn(),
       },
       answer: { findMany: jest.fn(), upsert: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
     };
-    prisma.$transaction = jest.fn().mockResolvedValue(undefined);
     redis = { set: jest.fn(), sadd: jest.fn(), expire: jest.fn(), zadd: jest.fn() };
     const mockJwt = { sign: jest.fn().mockReturnValue('token'), verify: jest.fn() };
     const module: TestingModule = await Test.createTestingModule({
@@ -40,12 +40,16 @@ describe('StudentService', () => {
 
   describe('submitExam', () => {
     it('should calculate score correctly', async () => {
-      prisma.examRecord.findUnique.mockResolvedValue({
-        id: 'r1',
-        status: 'IN_PROGRESS',
-        startTime: new Date(Date.now() - 10 * 60000),
-        exam: { timeLimit: 30 },
-      });
+      // 1st findUnique: 拿 record 校验 status
+      prisma.examRecord.findUnique
+        .mockResolvedValueOnce({
+          id: 'r1',
+          status: 'IN_PROGRESS',
+          startTime: new Date(Date.now() - 10 * 60000),
+          exam: { timeLimit: 30 },
+        })
+        // 2nd findUnique: 拿最终返回的 record
+        .mockResolvedValueOnce({ id: 'r1', score: 5, status: 'SUBMITTED' });
       prisma.examQuestion.findMany.mockResolvedValue([
         { questionId: 'q1', score: 5, question: { answer: 'A' } },
         { questionId: 'q2', score: 3, question: { answer: 'B' } },
@@ -54,9 +58,9 @@ describe('StudentService', () => {
         { questionId: 'q1', selectedAnswer: 'A' },
         { questionId: 'q2', selectedAnswer: 'C' },
       ]);
-      prisma.answer.update.mockResolvedValue(undefined);
       prisma.answer.updateMany.mockResolvedValue({ count: 1 });
-      prisma.examRecord.update.mockResolvedValue({ id: 'r1', score: 5, status: 'SUBMITTED' });
+      prisma.$transaction = jest.fn().mockResolvedValue([]);
+      prisma.examRecord.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await service.submitExam('r1', 'exam1');
       expect(result.score).toBe(5);

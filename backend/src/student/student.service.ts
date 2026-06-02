@@ -115,57 +115,73 @@ export class StudentService {
       if (new Date() > deadline) throw new BadRequestException('考试已超时，无法交卷');
     }
 
-    // 算分 - 一次查询获取所有数据
+    // 算分 — 内存算完后按正确/错误分两组各 updateMany 一次
     const examQuestions = await this.prisma.examQuestion.findMany({
       where: { examId },
       select: { questionId: true, score: true, question: { select: { answer: true } } },
     });
     const answers = await this.prisma.answer.findMany({ where: { recordId } });
 
-    // 构建答案映射并计算分数
-    const answerMap = new Map(answers.map((a) => [a.questionId, a]));
+    const answerByQ = new Map(answers.map((a) => [a.questionId, a]));
+    const correctIds: string[] = [];
+    const wrongIds: string[] = [];
     let totalScore = 0;
-    const correctMap = new Map<string, boolean>();
 
     for (const eq of examQuestions) {
-      const ans = answerMap.get(eq.questionId);
-      const correct = ans?.selectedAnswer === eq.question.answer;
-      if (correct) totalScore += eq.score;
-      if (ans) correctMap.set(eq.questionId, correct);
+      const ans = answerByQ.get(eq.questionId);
+      if (!ans) continue;
+      if (ans.selectedAnswer === eq.question.answer) {
+        totalScore += eq.score;
+        correctIds.push(eq.questionId);
+      } else {
+        wrongIds.push(eq.questionId);
+      }
     }
 
-    // 批量更新所有 answer 的 correct 字段 (N+1 优化)
-    if (correctMap.size > 0) {
-      await this.prisma.$transaction(
-        Array.from(correctMap.entries()).map(([questionId, correct]) =>
-          this.prisma.answer.updateMany({
-            where: { recordId, questionId },
-            data: { correct },
-          }),
-        ),
-      );
-    }
-
-    return this.prisma.examRecord.update({
-      where: { id: recordId },
+    // 原子翻转 status：updateMany 带 where.status='IN_PROGRESS'，count=0 说明已被其他请求抢先
+    const { count } = await this.prisma.examRecord.updateMany({
+      where: { id: recordId, status: 'IN_PROGRESS' },
       data: { status: 'SUBMITTED', endTime: new Date(), score: totalScore },
+    });
+    if (count === 0) throw new BadRequestException('考试已结束');
+
+    // 答案 correct 标记幂等（已被提交的 record 重做不影响最终分数）
+    await this.prisma.$transaction([
+      ...(correctIds.length
+        ? [
+            this.prisma.answer.updateMany({
+              where: { recordId, questionId: { in: correctIds } },
+              data: { correct: true },
+            }),
+          ]
+        : []),
+      ...(wrongIds.length
+        ? [
+            this.prisma.answer.updateMany({
+              where: { recordId, questionId: { in: wrongIds } },
+              data: { correct: false },
+            }),
+          ]
+        : []),
+    ]);
+
+    return this.prisma.examRecord.findUnique({
+      where: { id: recordId },
       select: { id: true, score: true, status: true, endTime: true },
     });
   }
 
-  async getResult(recordId: string, tenantId: string) {
+  async getResult(recordId: string) {
     const record = await this.prisma.examRecord.findUnique({
       where: { id: recordId },
       include: {
-        exam: { select: { title: true, passScore: true, timeLimit: true, tenantId: true } },
+        exam: { select: { title: true, passScore: true, timeLimit: true } },
         answers: {
           select: { questionId: true, selectedAnswer: true, correct: true, timeSpent: true },
         },
       },
     });
     if (!record) throw new NotFoundException('考试记录不存在');
-    // 验证租户隔离
-    if (record.exam.tenantId !== tenantId) throw new NotFoundException('考试记录不存在');
     return record;
   }
 
