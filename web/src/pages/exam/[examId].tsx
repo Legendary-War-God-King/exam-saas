@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import studentApi from '@/lib/student-api';
@@ -17,8 +17,20 @@ export default function ExamPage() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const submitExam = useCallback(async (rid: string) => {
+    if (submitting || submitted) return; // 多 tab + 倒计时归零并发守卫
+    setSubmitting(true);
+    try {
+      await studentApi.post(`/student/exams/${examId}/submit`, { recordId: rid });
+      setSubmitted(true);
+    } catch {
+      setSubmitting(false); // 失败才解锁（成功保持锁定直到 unmount）
+    }
+  }, [examId, submitting, submitted]);
 
   useEffect(() => {
     if (!examId) return;
@@ -34,19 +46,15 @@ export default function ExamPage() {
 
   // Timer
   useEffect(() => {
-    if (secondsLeft <= 0 || submitted || !recordId || !examId) return;
+    if (secondsLeft <= 0 || submitted || !recordId) return;
     const t = setInterval(() => {
       setSecondsLeft((p) => {
-        if (p <= 1) {
-          setSubmitted(true); // 先设置状态阻止重复触发
-          void studentApi.post(`/student/exams/${examId}/submit`, { recordId });
-          return 0;
-        }
+        if (p <= 1) { void submitExam(recordId); return 0; }
         return p - 1;
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [secondsLeft, submitted, recordId, examId]);
+  }, [secondsLeft, submitted, recordId, submitExam]);
 
   const chooseAnswer = async (qid: string, answer: string) => {
     setAnswers((p) => ({ ...p, [qid]: answer }));
@@ -58,12 +66,15 @@ export default function ExamPage() {
   };
 
   const handleSubmit = async () => {
+    if (submitting || submitted) return;
     if (!confirm('确认交卷？交卷后不可修改。')) return;
+    setSubmitting(true);
     try {
       await studentApi.post(`/student/exams/${examId}/submit`, { recordId });
       setSubmitted(true);
       router.push(`/exam/${examId}/result?recordId=${recordId}`);
     } catch {
+      setSubmitting(false);
       setError('交卷失败，请重试');
     }
   };
