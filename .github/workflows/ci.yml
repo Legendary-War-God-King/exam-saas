@@ -246,6 +246,10 @@ jobs:
           # All three (backend, web, playwright) run inside ONE step.
           # Background processes only survive within their parent step,
           # so we put everything in the same step.
+          cd web
+          pnpm exec playwright install --with-deps chromium
+          cd ..
+
           node backend/dist/src/main.js > /tmp/backend.log 2>&1 &
           BACKEND_PID=$!
           echo "backend pid: $BACKEND_PID"
