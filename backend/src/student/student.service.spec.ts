@@ -63,8 +63,8 @@ describe('StudentService', () => {
       prisma.examRecord.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await service.submitExam('r1', 'exam1');
-      expect(result.score).toBe(5);
-      expect(result.status).toBe('SUBMITTED');
+      expect(result!.score).toBe(5);
+      expect(result!.status).toBe('SUBMITTED');
     });
 
     it('should reject if already submitted', async () => {
