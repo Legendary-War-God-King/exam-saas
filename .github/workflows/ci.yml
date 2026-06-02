@@ -232,7 +232,8 @@ jobs:
         working-directory: ./backend
         run: |
           pnpm build
-          node dist/main.js &
+          # nest build emits dist/src/main.js (it preserves the src/ tree).
+          node dist/src/main.js &
           BACKEND_PID=$!
           for i in $(seq 1 30); do
             curl -sf http://localhost:4000/api/v1/health && break
