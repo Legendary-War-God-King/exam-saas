@@ -40,15 +40,19 @@ export default function ExamPage() {
 
   // Timer
   useEffect(() => {
-    if (secondsLeft <= 0 || submitted || !recordId) return;
+    if (secondsLeft <= 0 || submitted || !recordId || !examId) return;
     const t = setInterval(() => {
       setSecondsLeft((p) => {
-        if (p <= 1) { submitExam(recordId); setSubmitted(true); return 0; }
+        if (p <= 1) {
+          setSubmitted(true); // 先设置状态阻止重复触发
+          void studentApi.post(`/student/exams/${examId}/submit`, { recordId: p.recordId ?? recordId });
+          return 0;
+        }
         return p - 1;
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [secondsLeft, submitted, recordId, submitExam]);
+  }, [secondsLeft, submitted, recordId, examId]);
 
   const chooseAnswer = async (qid: string, answer: string) => {
     setAnswers((p) => ({ ...p, [qid]: answer }));

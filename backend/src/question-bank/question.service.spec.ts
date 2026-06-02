@@ -70,7 +70,7 @@ describe('QuestionService', () => {
     it('should set deletedAt on question', async () => {
       prisma.question.findFirst.mockResolvedValue({ id: 'q1', deletedAt: null });
       prisma.question.update.mockResolvedValue({ id: 'q1', deletedAt: new Date() });
-      await service.softDelete('q1');
+      await service.softDelete('q1', undefined);
       expect(prisma.question.update).toHaveBeenCalledWith({
         where: { id: 'q1' },
         data: { deletedAt: expect.any(Date) },
@@ -79,7 +79,7 @@ describe('QuestionService', () => {
 
     it('should throw NotFoundException when question not found', async () => {
       prisma.question.findFirst.mockResolvedValue(null);
-      await expect(service.softDelete('q1')).rejects.toThrow(NotFoundException);
+      await expect(service.softDelete('q1', undefined)).rejects.toThrow(NotFoundException);
     });
   });
 });

@@ -64,9 +64,13 @@ export class QuestionService {
     return { data, total, page: params.page, limit: params.limit };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, tenantId?: string) {
+    const where: Record<string, unknown> = { id, deletedAt: null };
+    if (tenantId) {
+      where.bank = { tenantId, deletedAt: null };
+    }
     const q = await this.prisma.question.findFirst({
-      where: { id, deletedAt: null },
+      where,
       select: {
         id: true,
         type: true,
@@ -83,8 +87,8 @@ export class QuestionService {
     return q;
   }
 
-  async update(id: string, data: Record<string, unknown>) {
-    await this.findOne(id);
+  async update(id: string, tenantId: string | undefined, data: Record<string, unknown>) {
+    await this.findOne(id, tenantId);
     return this.prisma.question.update({
       where: { id },
       data,
@@ -101,8 +105,8 @@ export class QuestionService {
     });
   }
 
-  async softDelete(id: string) {
-    await this.findOne(id);
+  async softDelete(id: string, tenantId: string | undefined) {
+    await this.findOne(id, tenantId);
     await this.prisma.question.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 

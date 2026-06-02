@@ -15,7 +15,10 @@ interface ClientMeta {
   studentId?: string;
 }
 
-@WebSocketGateway({ cors: { origin: '*' }, namespace: '/proctoring' })
+@WebSocketGateway({
+  cors: { origin: process.env.FRONTEND_URL ?? 'http://localhost:3000' },
+  namespace: '/proctoring',
+})
 export class ProctoringGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server!: Server;
   private readonly logger = new Logger('Proctoring');

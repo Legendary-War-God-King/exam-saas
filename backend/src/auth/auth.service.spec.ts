@@ -4,6 +4,7 @@ import { ConflictException, UnauthorizedException, ForbiddenException } from '@n
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../common/redis/redis.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -11,11 +12,20 @@ describe('AuthService', () => {
   let service: AuthService;
 
   const mockPrisma = {
-    user: { findFirst: jest.fn(), findUnique: jest.fn(), create: jest.fn() },
+    user: { findFirst: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
     tenant: { create: jest.fn() },
+    $transaction: jest.fn(),
   };
 
   const mockJwt = { sign: jest.fn(), verify: jest.fn() };
+
+  const mockRedis = {
+    client: {
+      exists: jest.fn().mockResolvedValue(0),
+      set: jest.fn().mockResolvedValue('OK'),
+    },
+    set: jest.fn().mockResolvedValue(undefined),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -23,6 +33,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwt },
+        { provide: RedisService, useValue: mockRedis },
       ],
     }).compile();
 
@@ -41,13 +52,14 @@ describe('AuthService', () => {
     it('should register a new tenant and admin user', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
       mockPrisma.tenant.create.mockResolvedValue({ id: 't1', name: '测试机构' });
-      mockPrisma.user.create.mockResolvedValue({
+      // $transaction 需要返回 user 对象
+      mockPrisma.$transaction.mockImplementation(async () => ({
         id: 'u1',
         tenantId: 't1',
         email: dto.email,
         name: dto.name,
-        role: 'ADMIN',
-      });
+        role: 'ADMIN' as const,
+      }));
       mockJwt.sign.mockReturnValue('token');
 
       const result = await service.register(dto);
@@ -140,36 +152,38 @@ describe('AuthService', () => {
   });
 
   describe('refresh', () => {
-    it('should refresh tokens with valid refresh token', () => {
+    it('should refresh tokens with valid refresh token', async () => {
       mockJwt.verify.mockReturnValue({
         sub: 'u1',
         tenant_id: 't1',
         role: 'ADMIN',
         type: 'refresh',
+        jti: 'jti-123',
       });
       mockJwt.sign.mockReturnValue('new-token');
+      mockRedis.client.exists.mockResolvedValue(0);
 
-      const result = service.refresh('valid-refresh-token');
+      const result = await service.refresh('valid-refresh-token');
 
       expect(result.accessToken).toBe('new-token');
       expect(result.refreshToken).toBe('new-token');
     });
 
-    it('should throw UnauthorizedException when token type is not refresh', () => {
+    it('should throw UnauthorizedException when token type is not refresh', async () => {
       mockJwt.verify.mockReturnValue({
         sub: 'u1',
         tenant_id: 't1',
         role: 'ADMIN',
         type: 'access',
       });
-      expect(() => service.refresh('access-token')).toThrow(UnauthorizedException);
+      await expect(service.refresh('access-token')).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should throw UnauthorizedException when token is invalid', () => {
+    it('should throw UnauthorizedException when token is invalid', async () => {
       mockJwt.verify.mockImplementation(() => {
         throw new Error('invalid');
       });
-      expect(() => service.refresh('invalid')).toThrow(UnauthorizedException);
+      await expect(service.refresh('invalid')).rejects.toThrow(UnauthorizedException);
     });
   });
 });

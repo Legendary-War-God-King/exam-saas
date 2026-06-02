@@ -120,15 +120,31 @@ export class ExamService {
     });
   }
 
-  async bulkAddQuestions(examId: string, bankId: string) {
+  async bulkAddQuestions(tenantId: string, examId: string, bankId: string) {
+    // 验证考试属于当前租户
+    const exam = await this.prisma.exam.findFirst({
+      where: { id: examId, tenantId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!exam) throw new NotFoundException('考试不存在');
+
+    // 验证题库属于当前租户
+    const bank = await this.prisma.questionBank.findFirst({
+      where: { id: bankId, tenantId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!bank) throw new NotFoundException('题库不存在');
+
     const questions = await this.prisma.question.findMany({
       where: { bankId, deletedAt: null },
       select: { id: true },
     });
-    const existingIds = (await this.prisma.examQuestion.findMany({
-      where: { examId },
-      select: { questionId: true },
-    })).map((e) => e.questionId);
+    const existingIds = (
+      await this.prisma.examQuestion.findMany({
+        where: { examId },
+        select: { questionId: true },
+      })
+    ).map((e) => e.questionId);
     const existing = await this.prisma.examQuestion.findMany({
       where: { examId },
       select: { sortOrder: true },
@@ -148,22 +164,47 @@ export class ExamService {
     return { imported: newQuestions.length };
   }
 
-  async addQuestion(examId: string, questionId: string, score: number, sortOrder: number) {
+  async addQuestion(
+    tenantId: string,
+    examId: string,
+    questionId: string,
+    score: number,
+    sortOrder: number,
+  ) {
+    // 验证考试属于当前租户
+    const exam = await this.prisma.exam.findFirst({
+      where: { id: examId, tenantId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!exam) throw new NotFoundException('考试不存在');
     return this.prisma.examQuestion.create({
       data: { examId, questionId, score, sortOrder },
       select: { examId: true, questionId: true, score: true, sortOrder: true },
     });
   }
 
-  async removeQuestion(examId: string, questionId: string) {
+  async removeQuestion(tenantId: string, examId: string, questionId: string) {
+    // 验证考试属于当前租户
+    const exam = await this.prisma.exam.findFirst({
+      where: { id: examId, tenantId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!exam) throw new NotFoundException('考试不存在');
     await this.prisma.examQuestion.delete({ where: { examId_questionId: { examId, questionId } } });
   }
 
   async updateQuestion(
+    tenantId: string,
     examId: string,
     questionId: string,
     data: { score?: number; sortOrder?: number },
   ) {
+    // 验证考试属于当前租户
+    const exam = await this.prisma.exam.findFirst({
+      where: { id: examId, tenantId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!exam) throw new NotFoundException('考试不存在');
     return this.prisma.examQuestion.update({
       where: { examId_questionId: { examId, questionId } },
       data,

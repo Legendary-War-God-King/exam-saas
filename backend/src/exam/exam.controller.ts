@@ -81,33 +81,52 @@ export class ExamController {
   @Post('exams/:id/questions')
   @Roles('ADMIN', 'TEACHER')
   @ApiOperation({ summary: '添加题目到考试' })
-  addQuestion(@Param('id') id: string, @Body() dto: AddQuestionDto) {
-    return this.examService.addQuestion(id, dto.questionId, dto.score, dto.sortOrder);
+  addQuestion(
+    @Req() req: { user: { tenantId: string } },
+    @Param('id') id: string,
+    @Body() dto: AddQuestionDto,
+  ) {
+    return this.examService.addQuestion(
+      req.user.tenantId,
+      id,
+      dto.questionId,
+      dto.score,
+      dto.sortOrder,
+    );
   }
 
   @Delete('exams/:id/questions/:questionId')
   @Roles('ADMIN', 'TEACHER')
   @ApiOperation({ summary: '从考试移除题目' })
-  removeQuestion(@Param('id') id: string, @Param('questionId') questionId: string) {
-    return this.examService.removeQuestion(id, questionId);
+  removeQuestion(
+    @Req() req: { user: { tenantId: string } },
+    @Param('id') id: string,
+    @Param('questionId') questionId: string,
+  ) {
+    return this.examService.removeQuestion(req.user.tenantId, id, questionId);
   }
 
   @Patch('exams/:id/questions/:questionId')
   @Roles('ADMIN', 'TEACHER')
   @ApiOperation({ summary: '更新题目分值/排序' })
   updateQuestion(
+    @Req() req: { user: { tenantId: string } },
     @Param('id') id: string,
     @Param('questionId') questionId: string,
     @Body() dto: { score?: number; sortOrder?: number },
   ) {
-    return this.examService.updateQuestion(id, questionId, dto);
+    return this.examService.updateQuestion(req.user.tenantId, id, questionId, dto);
   }
 
   @Post('exams/:id/import-bank')
   @Roles('ADMIN', 'TEACHER')
   @ApiOperation({ summary: '从题库批量导入所有题目' })
-  importBank(@Param('id') id: string, @Body() body: { bankId: string }) {
-    return this.examService.bulkAddQuestions(id, body.bankId);
+  importBank(
+    @Req() req: { user: { tenantId: string } },
+    @Param('id') id: string,
+    @Body() body: { bankId: string },
+  ) {
+    return this.examService.bulkAddQuestions(req.user.tenantId, id, body.bankId);
   }
 
   @Post('exams/generate')

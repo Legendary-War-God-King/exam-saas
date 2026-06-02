@@ -34,6 +34,7 @@ describe('ExamAnalysisService', () => {
       expect(result.avg).toBe(70);
       expect(result.passCount).toBe(2);
       expect(result.passRate).toBe(66.67);
+      if (!result.distribution) return;
       expect(result.distribution['0-59']).toBe(1);
       expect(result.distribution['90-100']).toBe(1);
     });

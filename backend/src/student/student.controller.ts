@@ -52,9 +52,13 @@ export class StudentController {
   @UseGuards(AuthGuard('student-jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: '查看成绩' })
-  getResult(@Param('examId') examId: string, @Query('recordId') recordId: string) {
+  getResult(
+    @Param('examId') examId: string,
+    @Query('recordId') recordId: string,
+    @Req() req: { user: { tenantId: string } },
+  ) {
     void examId;
-    return this.studentService.getResult(recordId);
+    return this.studentService.getResult(recordId, req.user.tenantId);
   }
 
   @Post('exams/:examId/heartbeat')

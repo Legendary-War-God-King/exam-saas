@@ -107,28 +107,36 @@ export class ExamAnalysisService {
     });
     if (!exam) throw new NotFoundException('考试不存在');
 
+    // 一次查询获取所有交卷记录的答案
     const records = await this.prisma.examRecord.findMany({
       where: { examId, status: 'SUBMITTED' },
       include: { answers: true },
     });
 
+    // 构建答案映射表，键为 questionId，值为答案数组
+    const answerByQuestion = new Map<string, { selectedAnswer: string | null; correct: boolean }[]>();
+    for (const record of records) {
+      for (const ans of record.answers) {
+        const existing = answerByQuestion.get(ans.questionId) ?? [];
+        existing.push({ selectedAnswer: ans.selectedAnswer, correct: ans.correct });
+        answerByQuestion.set(ans.questionId, existing);
+      }
+    }
+
     return exam.examQuestions.map((eq) => {
+      const questionAnswers = answerByQuestion.get(eq.question.id) ?? [];
       const answerCounts: Record<string, number> = {};
       let correctCount = 0;
-      let totalAnswers = 0;
 
-      for (const record of records) {
-        const ans = record.answers.find((a) => a.questionId === eq.question.id);
-        if (ans) {
-          totalAnswers++;
-          const key = ans.selectedAnswer ?? '(未作答)';
-          answerCounts[key] = (answerCounts[key] ?? 0) + 1;
-          if (ans.correct) correctCount++;
-        }
+      for (const ans of questionAnswers) {
+        const key = ans.selectedAnswer ?? '(未作答)';
+        answerCounts[key] = (answerCounts[key] ?? 0) + 1;
+        if (ans.correct) correctCount++;
       }
 
-      const correctRate =
-        totalAnswers > 0 ? Math.round((correctCount / totalAnswers) * 10000) / 100 : 0;
+      const correctRate = questionAnswers.length > 0
+        ? Math.round((correctCount / questionAnswers.length) * 10000) / 100
+        : 0;
 
       return {
         questionId: eq.question.id,

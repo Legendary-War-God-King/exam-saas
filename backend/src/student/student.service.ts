@@ -115,24 +115,35 @@ export class StudentService {
       if (new Date() > deadline) throw new BadRequestException('考试已超时，无法交卷');
     }
 
-    // 算分
+    // 算分 - 一次查询获取所有数据
     const examQuestions = await this.prisma.examQuestion.findMany({
       where: { examId },
       select: { questionId: true, score: true, question: { select: { answer: true } } },
     });
     const answers = await this.prisma.answer.findMany({ where: { recordId } });
 
+    // 构建答案映射并计算分数
+    const answerMap = new Map(answers.map((a) => [a.questionId, a]));
     let totalScore = 0;
+    const correctMap = new Map<string, boolean>();
+
     for (const eq of examQuestions) {
-      const ans = answers.find((a) => a.questionId === eq.questionId);
+      const ans = answerMap.get(eq.questionId);
       const correct = ans?.selectedAnswer === eq.question.answer;
       if (correct) totalScore += eq.score;
-      if (ans) {
-        await this.prisma.answer.update({
-          where: { recordId_questionId: { recordId, questionId: eq.questionId } },
-          data: { correct },
-        });
-      }
+      if (ans) correctMap.set(eq.questionId, correct);
+    }
+
+    // 批量更新所有 answer 的 correct 字段 (N+1 优化)
+    if (correctMap.size > 0) {
+      await this.prisma.$transaction(
+        Array.from(correctMap.entries()).map(([questionId, correct]) =>
+          this.prisma.answer.updateMany({
+            where: { recordId, questionId },
+            data: { correct },
+          }),
+        ),
+      );
     }
 
     return this.prisma.examRecord.update({
@@ -142,17 +153,19 @@ export class StudentService {
     });
   }
 
-  async getResult(recordId: string) {
+  async getResult(recordId: string, tenantId: string) {
     const record = await this.prisma.examRecord.findUnique({
       where: { id: recordId },
       include: {
-        exam: { select: { title: true, passScore: true, timeLimit: true } },
+        exam: { select: { title: true, passScore: true, timeLimit: true, tenantId: true } },
         answers: {
           select: { questionId: true, selectedAnswer: true, correct: true, timeSpent: true },
         },
       },
     });
     if (!record) throw new NotFoundException('考试记录不存在');
+    // 验证租户隔离
+    if (record.exam.tenantId !== tenantId) throw new NotFoundException('考试记录不存在');
     return record;
   }
 

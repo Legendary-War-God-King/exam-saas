@@ -122,21 +122,25 @@ export class QuestionBankController {
   @Get('questions/:id')
   @Roles('ADMIN', 'TEACHER')
   @ApiOperation({ summary: '题目详情' })
-  getQuestion(@Param('id') id: string) {
-    return this.questionService.findOne(id);
+  getQuestion(@Req() req: { user: { tenantId: string } }, @Param('id') id: string) {
+    return this.questionService.findOne(id, req.user.tenantId);
   }
 
   @Patch('questions/:id')
   @Roles('ADMIN', 'TEACHER')
   @ApiOperation({ summary: '更新题目' })
-  updateQuestion(@Param('id') id: string, @Body() dto: UpdateQuestionDto) {
-    return this.questionService.update(id, dto as Record<string, unknown>);
+  updateQuestion(
+    @Req() req: { user: { tenantId: string } },
+    @Param('id') id: string,
+    @Body() dto: UpdateQuestionDto,
+  ) {
+    return this.questionService.update(id, req.user.tenantId, dto as Record<string, unknown>);
   }
 
   @Delete('questions/:id')
   @Roles('ADMIN')
   @ApiOperation({ summary: '删除题目' })
-  deleteQuestion(@Param('id') id: string) {
-    return this.questionService.softDelete(id);
+  deleteQuestion(@Req() req: { user: { tenantId: string } }, @Param('id') id: string) {
+    return this.questionService.softDelete(id, req.user.tenantId);
   }
 }
