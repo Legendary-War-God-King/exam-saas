@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import studentApi from '@/lib/student-api';
@@ -20,12 +20,6 @@ export default function ExamPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const submitExam = useCallback(async (rid: string) => {
-    try {
-      await studentApi.post(`/student/exams/${examId}/submit`, { recordId: rid });
-    } catch { /* auto-submit on timeout */ }
-  }, [examId]);
-
   useEffect(() => {
     if (!examId) return;
     studentApi.get(`/student/exams/${examId}/questions`)
@@ -45,7 +39,7 @@ export default function ExamPage() {
       setSecondsLeft((p) => {
         if (p <= 1) {
           setSubmitted(true); // 先设置状态阻止重复触发
-          void studentApi.post(`/student/exams/${examId}/submit`, { recordId: p.recordId ?? recordId });
+          void studentApi.post(`/student/exams/${examId}/submit`, { recordId });
           return 0;
         }
         return p - 1;

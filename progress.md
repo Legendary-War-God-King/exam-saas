@@ -135,3 +135,32 @@
 | GitHub | 33 commits, Legendary-War-God-King/exam-saas |
 | 设计文档 | 10 份 |
 | 截图验证 | 5 Playwright 截图 |
+
+---
+
+## 2026-06-02 安全修复
+
+### 企业级审查修复 (P0 + P1)
+
+**P0 安全漏洞修复:**
+- **IDOR 租户隔离**: 考试/题目端点加 tenantId 验证，防止跨租户越权
+- **Refresh Token Rotation**: JWT 加 jti，Redis 黑名单防 token 重放攻击
+- **Timer Race Condition**: 前端 setSubmitted 先于 submitExam 防止重复交卷
+- **WebSocket CORS**: origin 从 `*` 改为 `FRONTEND_URL` 环境变量
+
+**P1 性能/体验优化:**
+- **N+1 查询优化**: submitExam 用 `$transaction` 批量更新，getQuestionAnalysis 用 Map 索引
+- **JWT Refresh Interceptor**: 401 自动刷新 token，不强制登出
+- **配置外置**: 硬编码 tenantId 改为 `NEXT_PUBLIC_DEFAULT_TENANT_ID`
+
+**其他修复:**
+- register() 加 `$transaction` 事务包装，防止孤儿 tenant
+- 修复 auth.service.spec.ts mock 配置
+
+**验证:** lint ✅ | tsc ✅ | test 40/40 ✅ | build ✅
+
+---
+
+> 分支: main | CI: 待推送 | 阶段: 安全漏洞修复完成
+> 下一步: Push → CI → 可选 P2 (组件提取/健康检查)
+> 阻塞: 无

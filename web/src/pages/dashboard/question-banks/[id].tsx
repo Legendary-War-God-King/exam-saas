@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
 import Modal from '@/components/Modal';
+import ErrorBanner from '@/components/ErrorBanner';
 import api from '@/lib/api';
 
 interface Question {
@@ -97,12 +98,7 @@ export default function QuestionBankDetailPage() {
   return (
     <ProtectedRoute>
       <Layout title={`题库: ${bankName}`}>
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex justify-between">
-            <span>{error}</span>
-            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">&times;</button>
-          </div>
-        )}
+        <ErrorBanner error={error} onDismiss={() => setError('')} />
         <div className="flex gap-2 mb-4">
           <button onClick={() => setShowCreate(true)} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建题目</button>
           <button onClick={() => setShowImport(true)} className="border px-4 py-1.5 rounded text-sm hover:bg-slate-50">批量导入 (JSON)</button>

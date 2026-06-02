@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
 import Modal from '@/components/Modal';
+import ErrorBanner from '@/components/ErrorBanner';
+import StatusBadge from '@/components/StatusBadge';
 import api from '@/lib/api';
 
 interface ExamDetail {
@@ -137,18 +139,13 @@ export default function ExamDetailPage() {
   return (
     <ProtectedRoute>
       <Layout title={exam.title}>
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex justify-between">
-            <span>{error}</span>
-            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">&times;</button>
-          </div>
-        )}
+        <ErrorBanner error={error} onDismiss={() => setError('')} />
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-4 text-sm text-gray-500">
             <span>时长: {exam.timeLimit}分钟</span>
             <span>及格分: {exam.passScore}</span>
             <span>防作弊: {exam.antiCheat ? '开启' : '关闭'}</span>
-            <span>状态: {exam.status}</span>
+            <span>状态: <StatusBadge status={exam.status} /></span>
           </div>
           <div className="flex gap-2">
             {exam.status === 'DRAFT' && (

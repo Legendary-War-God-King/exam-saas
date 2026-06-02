@@ -114,7 +114,10 @@ export class ExamAnalysisService {
     });
 
     // 构建答案映射表，键为 questionId，值为答案数组
-    const answerByQuestion = new Map<string, { selectedAnswer: string | null; correct: boolean }[]>();
+    const answerByQuestion = new Map<
+      string,
+      { selectedAnswer: string | null; correct: boolean }[]
+    >();
     for (const record of records) {
       for (const ans of record.answers) {
         const existing = answerByQuestion.get(ans.questionId) ?? [];
@@ -134,9 +137,10 @@ export class ExamAnalysisService {
         if (ans.correct) correctCount++;
       }
 
-      const correctRate = questionAnswers.length > 0
-        ? Math.round((correctCount / questionAnswers.length) * 10000) / 100
-        : 0;
+      const correctRate =
+        questionAnswers.length > 0
+          ? Math.round((correctCount / questionAnswers.length) * 10000) / 100
+          : 0;
 
       return {
         questionId: eq.question.id,

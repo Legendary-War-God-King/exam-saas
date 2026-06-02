@@ -53,13 +53,21 @@ describe('AuthService', () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
       mockPrisma.tenant.create.mockResolvedValue({ id: 't1', name: '测试机构' });
       // $transaction 需要返回 user 对象
-      mockPrisma.$transaction.mockImplementation(async () => ({
-        id: 'u1',
-        tenantId: 't1',
-        email: dto.email,
-        name: dto.name,
-        role: 'ADMIN' as const,
-      }));
+
+      mockPrisma.$transaction.mockImplementation((fn: (prisma: unknown) => unknown) => {
+        const mockPrismaDelegate = {
+          user: {
+            create: jest.fn().mockResolvedValue({
+              id: 'u1',
+              tenantId: 't1',
+              email: dto.email,
+              name: dto.name,
+              role: 'ADMIN' as const,
+            }),
+          },
+        };
+        return fn(mockPrismaDelegate);
+      });
       mockJwt.sign.mockReturnValue('token');
 
       const result = await service.register(dto);

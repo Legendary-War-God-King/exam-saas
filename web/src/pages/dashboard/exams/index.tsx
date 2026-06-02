@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
 import Modal from '@/components/Modal';
+import ErrorBanner from '@/components/ErrorBanner';
+import StatusBadge from '@/components/StatusBadge';
 import api from '@/lib/api';
 
 interface Exam {
@@ -38,24 +40,10 @@ export default function ExamsPage() {
     }
   };
 
-  const statusLabel = (s: string) => {
-    const map: Record<string, string> = { DRAFT: '草稿', PUBLISHED: '已发布', IN_PROGRESS: '进行中', FINISHED: '已结束' };
-    return map[s] ?? s;
-  };
-  const statusCls = (s: string) => {
-    const map: Record<string, string> = { DRAFT: 'bg-slate-100 text-slate-500', PUBLISHED: 'bg-emerald-50 text-emerald-600', IN_PROGRESS: 'bg-brand-100 text-brand-700', FINISHED: 'bg-accent-50 text-accent-600' };
-    return map[s] ?? 'bg-slate-100';
-  };
-
   return (
     <ProtectedRoute>
       <Layout title="考试管理">
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex justify-between">
-            <span>{error}</span>
-            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">&times;</button>
-          </div>
-        )}
+        <ErrorBanner error={error} onDismiss={() => setError('')} />
         <div className="flex justify-end mb-4">
           <button onClick={() => setShowCreate(true)} className="bg-brand-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">创建考试</button>
         </div>
@@ -75,7 +63,7 @@ export default function ExamsPage() {
                   <td className="py-2 px-4">{e.passScore}</td>
                   <td className="py-2 px-4">{e._count.examQuestions}</td>
                   <td className="py-2 px-4">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusCls(e.status)}`}>{statusLabel(e.status)}</span>
+                    <StatusBadge status={e.status} />
                   </td>
                 </tr>
               ))}

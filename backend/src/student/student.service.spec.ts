@@ -22,8 +22,9 @@ describe('StudentService', () => {
         create: jest.fn(),
         update: jest.fn(),
       },
-      answer: { findMany: jest.fn(), upsert: jest.fn(), update: jest.fn() },
+      answer: { findMany: jest.fn(), upsert: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
     };
+    prisma.$transaction = jest.fn().mockResolvedValue(undefined);
     redis = { set: jest.fn(), sadd: jest.fn(), expire: jest.fn(), zadd: jest.fn() };
     const mockJwt = { sign: jest.fn().mockReturnValue('token'), verify: jest.fn() };
     const module: TestingModule = await Test.createTestingModule({
@@ -54,6 +55,7 @@ describe('StudentService', () => {
         { questionId: 'q2', selectedAnswer: 'C' },
       ]);
       prisma.answer.update.mockResolvedValue(undefined);
+      prisma.answer.updateMany.mockResolvedValue({ count: 1 });
       prisma.examRecord.update.mockResolvedValue({ id: 'r1', score: 5, status: 'SUBMITTED' });
 
       const result = await service.submitExam('r1', 'exam1');

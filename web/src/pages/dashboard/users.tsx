@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
 import Modal from '@/components/Modal';
+import ErrorBanner from '@/components/ErrorBanner';
+import StatusBadge from '@/components/StatusBadge';
 import api from '@/lib/api';
 
 interface User {
@@ -55,12 +57,7 @@ export default function UsersPage() {
     <ProtectedRoute>
       <Layout title="用户管理">
         <div className="bg-white rounded-lg shadow p-6">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex justify-between">
-              <span>{error}</span>
-              <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">&times;</button>
-            </div>
-          )}
+          <ErrorBanner error={error} onDismiss={() => setError('')} />
           <div className="flex justify-between mb-4">
             <div className="flex gap-2">
               <input placeholder="搜索姓名/邮箱" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -90,9 +87,7 @@ export default function UsersPage() {
                   <td className="py-2 text-gray-500">{u.email}</td>
                   <td className="py-2">{u.role === 'ADMIN' ? '管理员' : '教师'}</td>
                   <td className="py-2">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${u.disabledAt ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                      {u.disabledAt ? '已禁用' : '正常'}
-                    </span>
+                    <StatusBadge status={u.disabledAt ? 'DISABLED' : 'ACTIVE'} />
                   </td>
                   <td className="py-2">
                     <button
