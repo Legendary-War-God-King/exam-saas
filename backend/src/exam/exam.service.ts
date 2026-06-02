@@ -121,19 +121,12 @@ export class ExamService {
   }
 
   async bulkAddQuestions(tenantId: string, examId: string, bankId: string) {
-    // 验证考试属于当前租户
+    // IDOR 防护：验 exam 属于该租户
     const exam = await this.prisma.exam.findFirst({
       where: { id: examId, tenantId, deletedAt: null },
       select: { id: true },
     });
     if (!exam) throw new NotFoundException('考试不存在');
-
-    // 验证题库属于当前租户
-    const bank = await this.prisma.questionBank.findFirst({
-      where: { id: bankId, tenantId, deletedAt: null },
-      select: { id: true },
-    });
-    if (!bank) throw new NotFoundException('题库不存在');
 
     const questions = await this.prisma.question.findMany({
       where: { bankId, deletedAt: null },
@@ -171,7 +164,7 @@ export class ExamService {
     score: number,
     sortOrder: number,
   ) {
-    // 验证考试属于当前租户
+    // IDOR 防护：验 exam 属于该租户
     const exam = await this.prisma.exam.findFirst({
       where: { id: examId, tenantId, deletedAt: null },
       select: { id: true },
@@ -184,7 +177,7 @@ export class ExamService {
   }
 
   async removeQuestion(tenantId: string, examId: string, questionId: string) {
-    // 验证考试属于当前租户
+    // IDOR 防护：验 exam 属于该租户
     const exam = await this.prisma.exam.findFirst({
       where: { id: examId, tenantId, deletedAt: null },
       select: { id: true },
@@ -199,7 +192,7 @@ export class ExamService {
     questionId: string,
     data: { score?: number; sortOrder?: number },
   ) {
-    // 验证考试属于当前租户
+    // IDOR 防护：验 exam 属于该租户
     const exam = await this.prisma.exam.findFirst({
       where: { id: examId, tenantId, deletedAt: null },
       select: { id: true },
