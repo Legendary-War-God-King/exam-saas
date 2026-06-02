@@ -252,6 +252,10 @@ jobs:
             curl -sf http://localhost:3000/login && break
             sleep 2
           done
+          # Debug: confirm the env made it into the bundle
+          echo "=== bundle env check ==="
+          grep -r "11111111-1111-1111-1111-111111111111" .next/static 2>/dev/null | head -1 || echo "tenantId NOT inlined in bundle!"
+          echo "=== end ==="
 
       - name: Install Playwright browsers
         working-directory: ./web
