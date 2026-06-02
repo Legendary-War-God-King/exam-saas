@@ -3,7 +3,7 @@
 ## 技术栈
 
 - 后端: NestJS 11 + TypeScript
-- 前端 (待建): Next.js 14 + React 18 + Tailwind CSS 3
+- 前端: Next.js 14 + React 18 + Tailwind CSS 3
 - 数据库: PostgreSQL 17 + Redis 7 (ioredis)
 - ORM: Prisma 7
 - 包管理: pnpm workspace
