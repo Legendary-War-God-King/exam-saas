@@ -9,7 +9,10 @@ import { test, expect, Page } from '@playwright/test';
  */
 
 const STUDENT_NO = `PWE2E_${Date.now().toString(36)}`;
-const EXAM_CODE = '817314'; // 英语期末考 (DB 里 PUBLISHED)
+// CI uses SQL-seeded exam with code 999999 (tenant 1111...).
+// Local dev can use either 999999 (run a one-time SQL insert) or 817314
+// (the pre-existing '英语期末考' from local seed).
+const EXAM_CODE = process.env.E2E_EXAM_CODE ?? '999999';
 
 async function shot(page: Page, name: string) {
   await page.screenshot({ path: `test-results/${name}.png`, fullPage: true });
