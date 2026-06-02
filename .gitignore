@@ -26,3 +26,5 @@ Thumbs.db
 *.log
 .turbo
 coverage/
+test-results/
+playwright-report/
