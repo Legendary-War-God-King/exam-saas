@@ -1,7 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({
+  connectionString:
+    process.env.DATABASE_URL ??
+    'postgresql://postgres:postgres@localhost:5432/exam_saas?schema=public',
+});
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const email = process.env.SEED_ADMIN_EMAIL;
