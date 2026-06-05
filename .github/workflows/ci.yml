@@ -253,23 +253,31 @@ jobs:
           node backend/dist/src/main.js > /tmp/backend.log 2>&1 &
           BACKEND_PID=$!
           echo "backend pid: $BACKEND_PID"
+          sleep 3
+          echo "=== backend.log immediately after start ==="
+          cat /tmp/backend.log
+          echo "=== end ==="
           for i in $(seq 1 30); do
             curl -sf http://localhost:4000/api/v1/health && break
             sleep 2
           done
           echo "backend.log tail:"
-          tail -5 /tmp/backend.log
+          tail -10 /tmp/backend.log
 
           cd web
           npx next start -p 3000 > /tmp/web.log 2>&1 &
           WEB_PID=$!
           echo "web pid: $WEB_PID"
+          sleep 5
+          echo "=== web.log immediately after start ==="
+          cat /tmp/web.log
+          echo "=== end ==="
           for i in $(seq 1 30); do
             curl -sf http://localhost:3000/login && break
             sleep 2
           done
           echo "web.log tail:"
-          tail -5 /tmp/web.log
+          tail -10 /tmp/web.log
 
           # Confirm tenantId inlined in bundle
           grep -r "11111111-1111-1111-1111-111111111111" .next/static 2>/dev/null | head -1 \
