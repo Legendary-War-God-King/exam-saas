@@ -297,10 +297,19 @@ jobs:
 
           # Run Playwright
           pnpm exec playwright test
+          E2E_EXIT=$?
+
+          # Post-mortem: did the backend survive the test run?
+          echo "=== POST-E2E backend state ==="
+          curl -sv -m 3 http://localhost:4000/api/v1/health 2>&1 | tail -5
+          echo "=== POST-E2E backend.log tail ==="
+          tail -15 /tmp/backend.log
+          echo "=== end ==="
 
           # Cleanup
           kill $BACKEND_PID 2>/dev/null
           kill $WEB_PID 2>/dev/null
+          exit $E2E_EXIT
 
       - name: Upload test artifacts
         if: always()
